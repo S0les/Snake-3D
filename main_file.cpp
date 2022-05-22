@@ -3,8 +3,11 @@
 #include <iostream>
 #include <stdlib.h>
 
+int aspectRatio = 1;
 void key_callback(GLFWwindow *window, int key, int scancode, int action,
                   int mode);
+void windowResizeCallback(GLFWwindow *window, int width, int height);
+
 void initOpenglProgram(GLFWwindow *window);
 void freeOpenglProgram(GLFWwindow *window);
 void drawScene(GLFWwindow *window);
@@ -31,7 +34,7 @@ int main(int argc, char *argv[]) {
   }
 
   while (!glfwWindowShouldClose(window)) {
-    glfwSetKeyCallback(window, key_callback);
+    initOpenglProgram(window);
     drawScene(window);
     glfwPollEvents();
   }
@@ -48,12 +51,25 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action,
     glfwSetWindowShouldClose(window, GL_TRUE);
 }
 
-void initOpenglProgram(GLFWwindow *window) { return; }
+void windowResizeCallback(GLFWwindow *window, int width, int height) {
+  if (height == 0)
+    return;
+  aspectRatio = (float)width / (float)height;
+  glViewport(0, 0, width, height);
+}
+
+void initOpenglProgram(GLFWwindow *window) {
+
+  glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+  glfwSetWindowSizeCallback(window, windowResizeCallback);
+  glfwSetKeyCallback(window, key_callback);
+
+  return;
+}
 
 void freeOpenglProgram(GLFWwindow *window) { return; }
 
 void drawScene(GLFWwindow *window) {
-  glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT);
   glfwSwapBuffers(window);
   return;
