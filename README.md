@@ -4,7 +4,7 @@
 
 To build the Dockerfile, run in the directory `Dockerfile/`:
 
-> sudo docker build -t snakebuilder .
+> sudo docker build -t snakebuilder . && cd ..
 
 And then run:
 
