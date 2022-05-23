@@ -68,7 +68,7 @@ void initOpenglProgram(GLFWwindow *window) {
 }
 
 void freeOpenglProgram(GLFWwindow *window) {
-  glfwDestroyWindow(window); // Usuń kontekst OpenGL i okn
+  glfwDestroyWindow(window);
   return;
 }
 
