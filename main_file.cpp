@@ -1,6 +1,8 @@
+#include "shaderprogram.h"
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <SOIL/SOIL.h>
+#include <cmath>
 #include <cstdint>
 #include <iostream>
 #include <stdlib.h>
@@ -26,20 +28,21 @@ int main(int argc, char *argv[]) {
   initWindow(window);
   glfwMakeContextCurrent(window);
   glfwSwapInterval(1);
-
   if (int err = glewInit() != GLEW_OK) {
     fprintf(stderr, "Can't initalize GLEW: %s\n", glewGetErrorString(err));
     return -1;
   }
 
+  initShaders();
   while (!glfwWindowShouldClose(window)) {
     initOpenglProgram(window);
+    basicShader->use();
     drawScene(window);
     glfwPollEvents();
   }
 
+  freeShaders();
   freeOpenglProgram(window);
-  glfwDestroyWindow(window); // Usuń kontekst OpenGL i okn
   glfwTerminate();
   return 0;
 }
@@ -64,10 +67,13 @@ void initOpenglProgram(GLFWwindow *window) {
   return;
 }
 
-void freeOpenglProgram(GLFWwindow *window) { return; }
+void freeOpenglProgram(GLFWwindow *window) {
+  glfwDestroyWindow(window);
+  return;
+}
 
 void drawScene(GLFWwindow *window) {
-  glClear(GL_COLOR_BUFFER_BIT);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glfwSwapBuffers(window);
   return;
 }
