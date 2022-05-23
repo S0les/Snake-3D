@@ -16,6 +16,7 @@ void initOpenglProgram(GLFWwindow *window);
 void freeOpenglProgram(GLFWwindow *window);
 void drawScene(GLFWwindow *window);
 void initWindow(GLFWwindow *window);
+void generateMap();
 
 int main(int argc, char *argv[]) {
   GLFWwindow *window;
@@ -34,6 +35,7 @@ int main(int argc, char *argv[]) {
   }
 
   initShaders();
+
   while (!glfwWindowShouldClose(window)) {
     initOpenglProgram(window);
     basicShader->use();
@@ -74,6 +76,7 @@ void freeOpenglProgram(GLFWwindow *window) {
 
 void drawScene(GLFWwindow *window) {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  generateMap();
   glfwSwapBuffers(window);
   return;
 }
@@ -94,4 +97,26 @@ void initWindow(GLFWwindow *window) {
   }
   load_favicon(window);
   return;
+}
+
+void generateMap() {
+  // TODO Move definition part of code to the header file
+  float vertices[] = {
+      1.0f, -1.0f, 0.0f,  1.0f,  -1.0f, 1.0f,
+      0.0f, 1.0f,  -1.0f, -1.0f, 0.0f,  1.0f,
+
+      1.0f, -1.0f, 0.0f,  1.0f,  1.0f,  1.0f,
+      0.0f, 1.0f,  -1.0f, 1.0f,  0.0f,  1.0f,
+  };
+
+  float tex_coords[] = {
+      1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f,
+  };
+
+  int vertexcount = 6;
+
+  glEnableVertexAttribArray(basicShader->attrib("position"));
+  glVertexAttribPointer(basicShader->attrib("position"), 4, GL_FLOAT, false, 0, vertices);
+  glDrawArrays (GL_TRIANGLES, 0, vertexcount);
+  glDisableVertexAttribArray(basicShader->attrib("position"));
 }
