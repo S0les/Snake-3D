@@ -79,6 +79,10 @@ ShaderProgram::ShaderProgram(const char *vertexShaderFile,
   }
 }
 
+GLuint ShaderProgram::attrib(const char *variableName) {
+  return glGetAttribLocation(shaderProgram, variableName);
+}
+
 void ShaderProgram::use() { glUseProgram(shaderProgram); }
 
 ShaderProgram::~ShaderProgram() {
