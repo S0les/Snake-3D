@@ -83,6 +83,10 @@ GLuint ShaderProgram::attrib(const char *variableName) {
   return glGetAttribLocation(shaderProgram, variableName);
 }
 
+GLuint ShaderProgram::uniform(const char *variableName) {
+  return glGetUniformLocation(shaderProgram, variableName);
+}
+
 void ShaderProgram::use() { glUseProgram(shaderProgram); }
 
 ShaderProgram::~ShaderProgram() {

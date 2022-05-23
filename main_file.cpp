@@ -8,15 +8,17 @@
 #include <stdlib.h>
 
 int aspectRatio = 1;
+GLuint map_texture;
+
 void key_callback(GLFWwindow *window, int key, int scancode, int action,
                   int mode);
 void windowResizeCallback(GLFWwindow *window, int width, int height);
-
 void initOpenglProgram(GLFWwindow *window);
 void freeOpenglProgram(GLFWwindow *window);
 void drawScene(GLFWwindow *window);
 void initWindow(GLFWwindow *window);
 void generateMap();
+GLuint loadTexture(const char *filepath);
 
 int main(int argc, char *argv[]) {
   GLFWwindow *window;
@@ -66,10 +68,12 @@ void initOpenglProgram(GLFWwindow *window) {
   glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
   glfwSetWindowSizeCallback(window, windowResizeCallback);
   glfwSetKeyCallback(window, key_callback);
+  map_texture = loadTexture("images/map-texture.png");
   return;
 }
 
 void freeOpenglProgram(GLFWwindow *window) {
+  glDeleteTextures(1, &map_texture);
   glfwDestroyWindow(window);
   return;
 }
@@ -116,7 +120,34 @@ void generateMap() {
   int vertexcount = 6;
 
   glEnableVertexAttribArray(basicShader->attrib("position"));
-  glVertexAttribPointer(basicShader->attrib("position"), 4, GL_FLOAT, false, 0, vertices);
-  glDrawArrays (GL_TRIANGLES, 0, vertexcount);
+  glVertexAttribPointer(basicShader->attrib("position"), 4, GL_FLOAT, false, 0,
+                        vertices);
+
+  glEnableVertexAttribArray(basicShader->attrib("textureCoords"));
+  glVertexAttribPointer(basicShader->attrib("textureCoords"), 2, GL_FLOAT,
+                        false, 0, tex_coords);
+
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, map_texture);
+  glUniform1i(basicShader->uniform("textureMap"), 0);
+
+  glDrawArrays(GL_TRIANGLES, 0, vertexcount);
   glDisableVertexAttribArray(basicShader->attrib("position"));
+  glDisableVertexAttribArray(basicShader->attrib("texture"));
+}
+
+GLuint loadTexture(const char *filepath) {
+  GLuint texture;
+  int img_width, img_height;
+  unsigned char *image =
+      SOIL_load_image(filepath, &img_width, &img_height, 0, SOIL_LOAD_RGB);
+  glGenTextures(1, &texture);
+  glBindTexture(GL_TEXTURE_2D, texture);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, img_width, img_height, 0, GL_RGB,
+               GL_UNSIGNED_BYTE, image);
+  glBindTexture(GL_TEXTURE_2D, 0);
+  SOIL_free_image_data(image);
+  return texture;
 }

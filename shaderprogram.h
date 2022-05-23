@@ -19,6 +19,7 @@ public:
   GLuint shaderProgram;
   ShaderProgram(const char *vertexShaderFile, const char *fragmentShaderFile);
   GLuint attrib(const char *variableName);
+  GLuint uniform(const char *variableName);
   void use();
   ~ShaderProgram();
 };
