@@ -38,9 +38,10 @@ int main(int argc, char *argv[]) {
 
   initShaders();
 
+  initOpenglProgram(window);
+  basicShader->use();
+
   while (!glfwWindowShouldClose(window)) {
-    initOpenglProgram(window);
-    basicShader->use();
     drawScene(window);
     glfwPollEvents();
   }
