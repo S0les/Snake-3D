@@ -4,9 +4,11 @@
 #include <SOIL/SOIL.h>
 #include <cmath>
 #include <cstdint>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 #include <stdlib.h>
-
 int aspectRatio = 1;
 GLuint map_texture;
 
@@ -135,6 +137,11 @@ void generateMap() {
   glDrawArrays(GL_TRIANGLES, 0, vertexcount);
   glDisableVertexAttribArray(basicShader->attrib("position"));
   glDisableVertexAttribArray(basicShader->attrib("textureCoords"));
+
+  glm::mat4 transform = glm::mat4(1.0f);
+  transform = glm::rotate(transform, 1.5708f, glm::vec3(1.0f, 0.0f, 0.0f));
+  glUniformMatrix4fv(basicShader->uniform("Transform"), 1, false,
+                     glm::value_ptr(transform));
 }
 
 GLuint loadTexture(const char *filepath) {
