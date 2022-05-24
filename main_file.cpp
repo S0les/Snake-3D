@@ -1,3 +1,4 @@
+#include "map.h"
 #include "shaderprogram.h"
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -107,34 +108,19 @@ void initWindow(GLFWwindow *window) {
 }
 
 void generateMap() {
-  // TODO Move definition part of code to the header file
-  float vertices[] = {
-      1.0f, -1.0f, 0.0f,  1.0f,  -1.0f, 1.0f,
-      0.0f, 1.0f,  -1.0f, -1.0f, 0.0f,  1.0f,
-
-      1.0f, -1.0f, 0.0f,  1.0f,  1.0f,  1.0f,
-      0.0f, 1.0f,  -1.0f, 1.0f,  0.0f,  1.0f,
-  };
-
-  float tex_coords[] = {
-      3.0f, 0.0f, 0.0f, 3.0f, 0.0f, 0.0f, 3.0f, 0.0f, 3.0f, 3.0f, 0.0f, 3.0f,
-  };
-
-  int vertexcount = 6;
-
   glEnableVertexAttribArray(basicShader->attrib("position"));
   glVertexAttribPointer(basicShader->attrib("position"), 4, GL_FLOAT, false, 0,
-                        vertices);
+                        map_vertices);
 
   glEnableVertexAttribArray(basicShader->attrib("textureCoords"));
   glVertexAttribPointer(basicShader->attrib("textureCoords"), 2, GL_FLOAT,
-                        false, 0, tex_coords);
+                        false, 0, map_tex_coords);
 
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, map_texture);
   glUniform1i(basicShader->uniform("textureMap"), 0);
 
-  glDrawArrays(GL_TRIANGLES, 0, vertexcount);
+  glDrawArrays(GL_TRIANGLES, 0, map_vertexcount);
   glDisableVertexAttribArray(basicShader->attrib("position"));
   glDisableVertexAttribArray(basicShader->attrib("textureCoords"));
 
