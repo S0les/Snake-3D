@@ -134,7 +134,7 @@ void generateMap() {
 
   glDrawArrays(GL_TRIANGLES, 0, vertexcount);
   glDisableVertexAttribArray(basicShader->attrib("position"));
-  glDisableVertexAttribArray(basicShader->attrib("texture"));
+  glDisableVertexAttribArray(basicShader->attrib("textureCoords"));
 }
 
 GLuint loadTexture(const char *filepath) {
