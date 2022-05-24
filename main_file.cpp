@@ -41,7 +41,6 @@ int main(int argc, char *argv[]) {
   initShaders();
 
   initOpenglProgram(window);
-  basicShader->use();
 
   while (!glfwWindowShouldClose(window)) {
     drawScene(window);
@@ -83,6 +82,7 @@ void freeOpenglProgram(GLFWwindow *window) {
 
 void drawScene(GLFWwindow *window) {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  basicShader->use();
   generateMap();
   glfwSwapBuffers(window);
   return;
