@@ -32,6 +32,7 @@ GLfloat lastFrame = 0.0f;
 
 
 
+void lookAt();
 void key_callback(GLFWwindow *window, int key, int scancode, int action,
                   int mode);
 void mouse_callback(GLFWwindow* window , double xpos, double ypos);
@@ -42,7 +43,6 @@ void drawScene(GLFWwindow *window);
 void initWindow(GLFWwindow *window);
 void generateMap();
 void do_movement();
-void lookAt();
 
 GLuint loadTexture(const char *filepath);
 
@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
 
   initOpenglProgram(window);
 
-  while (!glfwWindowShouldClose(window)) {
+while (!glfwWindowShouldClose(window)) {
  
     lookAt();
     drawScene(window);
@@ -81,10 +81,18 @@ int main(int argc, char *argv[]) {
   return 0;
 }
 
-void key_callback(GLFWwindow *window, int key, int scancode, int action,
-                  int mode) {
-  if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-    glfwSetWindowShouldClose(window, GL_TRUE);
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
+ {
+     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+         glfwSetWindowShouldClose(window, GL_TRUE);
+ 
+     if (key >= 0 && key < 1024)
+     {
+         if (action == GLFW_PRESS)
+             keys[key] = true;
+         else if (action == GLFW_RELEASE)
+             keys[key] = false;
+     }
 }
 
 void windowResizeCallback(GLFWwindow *window, int width, int height) {
@@ -159,7 +167,9 @@ void generateMap() {
 
 void lookAt()
 {
-  
+   GLfloat currentFrame = glfwGetTime();
+   deltaTime = currentFrame - lastFrame;
+   lastFrame = currentFrame;   
 
    glm::mat4 model = glm::mat4(1.0f);
 
@@ -176,7 +186,8 @@ void lookAt()
    GLint viewLoc = glGetUniformLocation(basicShader->shaderProgram,"view");
    GLint projLoc = glGetUniformLocation(basicShader->shaderProgram,"projection");
 
-   glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::            value_ptr(model));
+
    glUniformMatrix4fv(viewLoc,1,GL_FALSE,glm::value_ptr(view));
 
    glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
@@ -206,9 +217,9 @@ void mouse_callback(GLFWwindow* window, double xpos , double ypos)
 
 void do_movement()
 {
-    if (keys[GLFW_KEY_W])
+    if(keys[GLFW_KEY_W])
         camera.ProcessKeyboard(FORWARD,deltaTime);
-    if (keys[GLFW_KEY_S])
+    if(keys[GLFW_KEY_S])
         camera.ProcessKeyboard(BACKWARD,deltaTime);
     if(keys[GLFW_KEY_A])
         camera.ProcessKeyboard(LEFT, deltaTime);
@@ -216,6 +227,8 @@ void do_movement()
         camera.ProcessKeyboard(RIGHT,deltaTime);
 
 }
+
+
 
 
 GLuint loadTexture(const char *filepath) {
