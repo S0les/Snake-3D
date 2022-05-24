@@ -42,7 +42,7 @@ void drawScene(GLFWwindow *window);
 void initWindow(GLFWwindow *window);
 void generateMap();
 void do_movement();
-
+void lookAt();
 
 GLuint loadTexture(const char *filepath);
 
@@ -53,7 +53,7 @@ int main(int argc, char *argv[]) {
     exit(EXIT_FAILURE);
   }
 
-  window = glfwCreateWindow(500, 500, "Snake3D", NULL, NULL);
+  window = glfwCreateWindow(WIDTH, HEIGHT, "Snake3D", NULL, NULL);
   initWindow(window);
   glfwMakeContextCurrent(window);
   glfwSwapInterval(1);
@@ -67,8 +67,12 @@ int main(int argc, char *argv[]) {
   initOpenglProgram(window);
 
   while (!glfwWindowShouldClose(window)) {
+ 
+    lookAt();
     drawScene(window);
-    glfwPollEvents();
+    glfwSetCursorPosCallback(window, mouse_callback);
+    glfwPollEvents(); 
+    do_movement();
   }
 
   freeShaders();
@@ -94,7 +98,7 @@ void initOpenglProgram(GLFWwindow *window) {
   glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
   glfwSetWindowSizeCallback(window, windowResizeCallback);
   glfwSetKeyCallback(window, key_callback);
-  map_texture = loadTexture("images/map-texture.png");
+  map_texture= loadTexture("images/map-texture.png");
   return;
 }
 
@@ -147,26 +151,28 @@ void generateMap() {
   glDisableVertexAttribArray(basicShader->attrib("position"));
   glDisableVertexAttribArray(basicShader->attrib("textureCoords"));
 
-  glm::mat4 transform = glm::mat4(1.0f);
-  transform = glm::rotate(transform, 1.5708f, glm::vec3(1.0f, 0.0f, 0.0f));
-  glUniformMatrix4fv(basicShader->uniform("Transform"), 1, false,
-                     glm::value_ptr(transform));
+  glm::mat4 model = glm::mat4(1.0f);
+  model = glm::rotate(model, 1.5708f, glm::vec3(1.0f, 0.0f, 0.0f));
+  glUniformMatrix4fv(basicShader->uniform("model"), 1, false,
+                   glm::value_ptr(model));
 }
 
 void lookAt()
 {
+  
+
    glm::mat4 model = glm::mat4(1.0f);
 
 
    glm::mat4 view = glm::mat4(1.0f);
    view = camera.GetViewMatrix();
    glm::mat4 projection = glm::mat4(1.0f);
-   model = glm::rotate(model, (GLfloat)glfwGetTime(), glm::vec3(0.5f,1.0f,0.0f));
+   model = glm::rotate(model, 0.0f , glm::vec3(0.5f,1.0f,0.0f));
    view = glm::translate(view, glm::vec3(0.0f,0.0f,-3.0f));
    projection = glm::perspective(camera.Zoom,(GLfloat)WIDTH / (GLfloat)HEIGHT, 0.1f, 100.0f);
 
    // TODO Refactoring
-   GLint modelLoc = glGetUniformLocation(basicShader->shaderProgram,"model");
+    GLint modelLoc = glGetUniformLocation(basicShader->shaderProgram,"model");
    GLint viewLoc = glGetUniformLocation(basicShader->shaderProgram,"view");
    GLint projLoc = glGetUniformLocation(basicShader->shaderProgram,"projection");
 
