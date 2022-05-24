@@ -1,5 +1,6 @@
 #include "map.h"
 #include "shaderprogram.h"
+#include "Camera.h"
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <SOIL/SOIL.h>
@@ -13,14 +14,36 @@
 int aspectRatio = 1;
 GLuint map_texture;
 
+//Размер окна 
+const GLuint WIDTH = 1920 , HEIGHT = 1080 ;
+bool keys[1024];
+
+
+//Camera , function LookAt
+Camera camera(glm::vec3(0.0f,0.0f,3.0f));
+//координаты центра экрана
+GLfloat lastX = WIDTH / 2.0;
+GLfloat lastY = HEIGHT / 2.0;
+bool firstMouse = true;
+
+//Переменые deltaTime, для оптимизации скорости на разном железе
+GLfloat deltaTime = 0.0f;
+GLfloat lastFrame = 0.0f;
+
+
+
 void key_callback(GLFWwindow *window, int key, int scancode, int action,
                   int mode);
+void mouse_callback(GLFWwindow* window , double xpos, double ypos);
 void windowResizeCallback(GLFWwindow *window, int width, int height);
 void initOpenglProgram(GLFWwindow *window);
 void freeOpenglProgram(GLFWwindow *window);
 void drawScene(GLFWwindow *window);
 void initWindow(GLFWwindow *window);
 void generateMap();
+void do_movement();
+
+
 GLuint loadTexture(const char *filepath);
 
 int main(int argc, char *argv[]) {
@@ -129,6 +152,65 @@ void generateMap() {
   glUniformMatrix4fv(basicShader->uniform("Transform"), 1, false,
                      glm::value_ptr(transform));
 }
+
+void lookAt()
+{
+   glm::mat4 model = glm::mat4(1.0f);
+
+
+   glm::mat4 view = glm::mat4(1.0f);
+   view = camera.GetViewMatrix();
+   glm::mat4 projection = glm::mat4(1.0f);
+   model = glm::rotate(model, (GLfloat)glfwGetTime(), glm::vec3(0.5f,1.0f,0.0f));
+   view = glm::translate(view, glm::vec3(0.0f,0.0f,-3.0f));
+   projection = glm::perspective(camera.Zoom,(GLfloat)WIDTH / (GLfloat)HEIGHT, 0.1f, 100.0f);
+
+   // TODO Refactoring
+   GLint modelLoc = glGetUniformLocation(basicShader->shaderProgram,"model");
+   GLint viewLoc = glGetUniformLocation(basicShader->shaderProgram,"view");
+   GLint projLoc = glGetUniformLocation(basicShader->shaderProgram,"projection");
+
+   glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+   glUniformMatrix4fv(viewLoc,1,GL_FALSE,glm::value_ptr(view));
+
+   glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
+ 
+
+}
+
+void mouse_callback(GLFWwindow* window, double xpos , double ypos)
+{
+    if (firstMouse)
+    {
+        lastX = xpos;
+        lastY = ypos;
+        firstMouse = false;
+    }
+
+    //Вычисляем смещение мыши с момента последнего кадры
+    GLfloat xoffset = xpos - lastX;
+    //Обратный порядок вычитания потому что оконные Y-координаты возрастают с верху вниз
+    GLfloat yoffset = lastY - ypos;
+    lastX = xpos;
+    lastY = ypos;
+
+    camera.ProcessMouseMovement(xoffset, yoffset);
+}
+
+
+void do_movement()
+{
+    if (keys[GLFW_KEY_W])
+        camera.ProcessKeyboard(FORWARD,deltaTime);
+    if (keys[GLFW_KEY_S])
+        camera.ProcessKeyboard(BACKWARD,deltaTime);
+    if(keys[GLFW_KEY_A])
+        camera.ProcessKeyboard(LEFT, deltaTime);
+    if(keys[GLFW_KEY_D])
+        camera.ProcessKeyboard(RIGHT,deltaTime);
+
+}
+
 
 GLuint loadTexture(const char *filepath) {
   GLuint texture;
