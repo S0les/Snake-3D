@@ -1,4 +1,5 @@
 #include "map.h"
+#include "fence.h"
 #include "shaderprogram.h"
 #include "Camera.h"
 #include <GL/glew.h>
@@ -13,9 +14,10 @@
 #include <stdlib.h>
 int aspectRatio = 1;
 GLuint map_texture;
+GLuint fence_texture;
 
 //Размер окна 
-const GLuint WIDTH = 1920 , HEIGHT = 1080 ;
+const GLuint WIDTH = 1080 , HEIGHT = 800 ;
 bool keys[1024];
 
 
@@ -42,6 +44,7 @@ void freeOpenglProgram(GLFWwindow *window);
 void drawScene(GLFWwindow *window);
 void initWindow(GLFWwindow *window);
 void generateMap();
+void generateFence(int fenceNumber);
 void do_movement();
 
 GLuint loadTexture(const char *filepath);
@@ -107,19 +110,26 @@ void initOpenglProgram(GLFWwindow *window) {
   glfwSetWindowSizeCallback(window, windowResizeCallback);
   glfwSetKeyCallback(window, key_callback);
   map_texture= loadTexture("images/map-texture.png");
+  fence_texture= loadTexture("images/stone_1.jpg");
   return;
 }
 
 void freeOpenglProgram(GLFWwindow *window) {
   glDeleteTextures(1, &map_texture);
+  glDeleteTextures(1,&fence_texture);
   glfwDestroyWindow(window);
   return;
 }
 
 void drawScene(GLFWwindow *window) {
+  glEnable(GL_DEPTH_TEST);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   basicShader->use();
   generateMap();
+  generateFence(0);
+  generateFence(1);
+  generateFence(2);
+  generateFence(3);
   glfwSwapBuffers(window);
   return;
 }
@@ -141,6 +151,52 @@ void initWindow(GLFWwindow *window) {
   load_favicon(window);
   return;
 }
+
+void generateFence(int fenceNumber)
+{
+   glm::vec3 fencePositions[] =
+    {
+    glm::vec3( -0.0f,0.5f,-10.0f),
+    glm::vec3( 0.0f, 0.5f,10.0f),
+    glm::vec3( -10.0f,0.5f,0.f),
+    glm::vec3 (10.0f,0.5,0.0f)
+    };
+    
+    GLfloat angle = 1.57f;
+
+
+    // Включаем переменные из шейдера
+   // и передаем им значения (координаты объекта, цвет, текстура...)
+   glEnableVertexAttribArray(basicShader->attrib("position"));
+   glVertexAttribPointer(basicShader->attrib("position"), 4, GL_FLOAT, false, 0,
+           fence_vertices);
+
+   //Атрибут с текстурами 
+   glEnableVertexAttribArray(basicShader->attrib("texCoord"));
+   glVertexAttribPointer(basicShader->attrib("texCoord"), 2, GL_FLOAT,
+                         false, 0, fence_tex_coords);
+ 
+
+
+   // Подключаю текустуру
+   glActiveTexture(GL_TEXTURE0);
+   glBindTexture(GL_TEXTURE_2D, fence_texture);
+   glUniform1i(basicShader->uniform("textureFence"), 0);
+  
+
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model,fencePositions[fenceNumber]);
+     if ( fenceNumber > 1 ){
+              model = glm::rotate(model, angle, glm::vec3(0.0f, 1.0f, 0.0f));
+          }
+    glUniformMatrix4fv(basicShader->uniform("model"), 1, false, glm::value_ptr(model));
+    glDrawArrays(GL_TRIANGLES,0,36);
+    glDisableVertexAttribArray(basicShader->attrib("position"));
+    glDisableVertexAttribArray(basicShader->attrib("texCoord"));
+
+    
+}
+
 
 void generateMap() {
   // Включаем переменные из шейдера
