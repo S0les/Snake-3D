@@ -155,14 +155,13 @@ void generateMap() {
   glBindTexture(GL_TEXTURE_2D, map_texture);
   glUniform1i(basicShader->uniform("textureMap"), 0);
 
+  glm::mat4 model = glm::mat4(1.0f);
+  model = glm::rotate(model, 1.5708f, glm::vec3(1.0f, 0.0f, 0.0f));
+  glUniformMatrix4fv(basicShader->uniform("model"), 1, false, glm::value_ptr(model));
+
   glDrawArrays(GL_TRIANGLES, 0, map_vertexcount);
   glDisableVertexAttribArray(basicShader->attrib("position"));
   glDisableVertexAttribArray(basicShader->attrib("textureCoords"));
-
-  glm::mat4 model = glm::mat4(1.0f);
-  model = glm::rotate(model, 1.5708f, glm::vec3(1.0f, 0.0f, 0.0f));
-  glUniformMatrix4fv(basicShader->uniform("model"), 1, false,
-                   glm::value_ptr(model));
 }
 
 void lookAt()
