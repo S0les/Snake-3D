@@ -143,6 +143,8 @@ void initWindow(GLFWwindow *window) {
 }
 
 void generateMap() {
+  // Включаем переменные из шейдера
+  // и передаем им значения (координаты объекта, цвет, текстура...)
   glEnableVertexAttribArray(basicShader->attrib("position"));
   glVertexAttribPointer(basicShader->attrib("position"), 4, GL_FLOAT, false, 0,
                         map_vertices);
@@ -151,14 +153,21 @@ void generateMap() {
   glVertexAttribPointer(basicShader->attrib("textureCoords"), 2, GL_FLOAT,
                         false, 0, map_tex_coords);
 
+  // Подключаю текустуру
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, map_texture);
   glUniform1i(basicShader->uniform("textureMap"), 0);
 
+  // Создаем Матрицу начала координат
   glm::mat4 model = glm::mat4(1.0f);
+  // Воротим объект вокруг матрицы (в нашем случае - начала координат)
+  // можно ворототить и вокруг других объектов, просто передав их матрицу
+  // первым аргументом
   model = glm::rotate(model, 1.5708f, glm::vec3(1.0f, 0.0f, 0.0f));
+  // Передаем значения в матрицу
   glUniformMatrix4fv(basicShader->uniform("model"), 1, false, glm::value_ptr(model));
 
+  // Рисуем наш объект и освобождаем шейдер для других объектов
   glDrawArrays(GL_TRIANGLES, 0, map_vertexcount);
   glDisableVertexAttribArray(basicShader->attrib("position"));
   glDisableVertexAttribArray(basicShader->attrib("textureCoords"));
