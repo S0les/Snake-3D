@@ -11,10 +11,10 @@ float map_vertices[] = {
 };
 
 float map_tex_coords[] = {
-    3.0f, 0.0f, 0.0f,
-    3.0f, 0.0f, 0.0f,
-    3.0f, 0.0f, 3.0f,
-    3.0f, 0.0f, 3.0f,
+    8.0f, 0.0f, 0.0f,
+    8.0f, 0.0f, 0.0f,
+    8.0f, 0.0f, 8.0f,
+    8.0f, 0.0f, 8.0f,
 };
 
 int map_vertexcount = 6;

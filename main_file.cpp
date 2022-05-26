@@ -1,7 +1,7 @@
-#include "map.h"
-#include "fence.h"
-#include "shaderprogram.h"
 #include "Camera.h"
+#include "fence.h"
+#include "map.h"
+#include "shaderprogram.h"
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <SOIL/SOIL.h>
@@ -16,28 +16,22 @@ int aspectRatio = 1;
 GLuint map_texture;
 GLuint fence_texture;
 
-//Размер окна 
-const GLuint WIDTH = 1080 , HEIGHT = 800 ;
+const GLuint WIDTH = 1080, HEIGHT = 800;
 bool keys[1024];
 
-
-//Camera , function LookAt
-Camera camera(glm::vec3(0.0f,0.0f,3.0f));
-//координаты центра экрана
+// Camera , function LookAt
+Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
 GLfloat lastX = WIDTH / 2.0;
 GLfloat lastY = HEIGHT / 2.0;
 bool firstMouse = true;
 
-//Переменые deltaTime, для оптимизации скорости на разном железе
 GLfloat deltaTime = 0.0f;
 GLfloat lastFrame = 0.0f;
-
-
 
 void lookAt();
 void key_callback(GLFWwindow *window, int key, int scancode, int action,
                   int mode);
-void mouse_callback(GLFWwindow* window , double xpos, double ypos);
+void mouse_callback(GLFWwindow *window, double xpos, double ypos);
 void windowResizeCallback(GLFWwindow *window, int width, int height);
 void initOpenglProgram(GLFWwindow *window);
 void freeOpenglProgram(GLFWwindow *window);
@@ -69,12 +63,12 @@ int main(int argc, char *argv[]) {
 
   initOpenglProgram(window);
 
-while (!glfwWindowShouldClose(window)) {
- 
+  while (!glfwWindowShouldClose(window)) {
+
     lookAt();
     drawScene(window);
     glfwSetCursorPosCallback(window, mouse_callback);
-    glfwPollEvents(); 
+    glfwPollEvents();
     do_movement();
   }
 
@@ -84,18 +78,17 @@ while (!glfwWindowShouldClose(window)) {
   return 0;
 }
 
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
- {
-     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-         glfwSetWindowShouldClose(window, GL_TRUE);
- 
-     if (key >= 0 && key < 1024)
-     {
-         if (action == GLFW_PRESS)
-             keys[key] = true;
-         else if (action == GLFW_RELEASE)
-             keys[key] = false;
-     }
+void key_callback(GLFWwindow *window, int key, int scancode, int action,
+                  int mode) {
+  if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+    glfwSetWindowShouldClose(window, GL_TRUE);
+
+  if (key >= 0 && key < 1024) {
+    if (action == GLFW_PRESS)
+      keys[key] = true;
+    else if (action == GLFW_RELEASE)
+      keys[key] = false;
+  }
 }
 
 void windowResizeCallback(GLFWwindow *window, int width, int height) {
@@ -109,14 +102,14 @@ void initOpenglProgram(GLFWwindow *window) {
   glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
   glfwSetWindowSizeCallback(window, windowResizeCallback);
   glfwSetKeyCallback(window, key_callback);
-  map_texture= loadTexture("images/map-texture.png");
-  fence_texture= loadTexture("images/stone_1.jpg");
+  map_texture = loadTexture("images/map-texture.png");
+  fence_texture = loadTexture("images/stone_1.jpg");
   return;
 }
 
 void freeOpenglProgram(GLFWwindow *window) {
   glDeleteTextures(1, &map_texture);
-  glDeleteTextures(1,&fence_texture);
+  glDeleteTextures(1, &fence_texture);
   glfwDestroyWindow(window);
   return;
 }
@@ -152,55 +145,38 @@ void initWindow(GLFWwindow *window) {
   return;
 }
 
-void generateFence(int fenceNumber)
-{
-   glm::vec3 fencePositions[] =
-    {
-    glm::vec3( -0.0f,0.5f,-10.0f),
-    glm::vec3( 0.0f, 0.5f,10.0f),
-    glm::vec3( -10.0f,0.5f,0.f),
-    glm::vec3 (10.0f,0.5,0.0f)
-    };
-    
-    GLfloat angle = 1.57f;
+void generateFence(int fenceNumber) {
+  glm::vec3 fencePositions[] = {
+      glm::vec3(-0.0f, 0.5f, -10.0f), glm::vec3(0.0f, 0.5f, 10.0f),
+      glm::vec3(-10.0f, 0.5f, 0.f), glm::vec3(10.0f, 0.5, 0.0f)};
 
+  GLfloat angle = 1.57f;
 
-    // Включаем переменные из шейдера
-   // и передаем им значения (координаты объекта, цвет, текстура...)
-   glEnableVertexAttribArray(basicShader->attrib("position"));
-   glVertexAttribPointer(basicShader->attrib("position"), 4, GL_FLOAT, false, 0,
-           fence_vertices);
+  glEnableVertexAttribArray(basicShader->attrib("position"));
+  glVertexAttribPointer(basicShader->attrib("position"), 4, GL_FLOAT, false, 0,
+                        fence_vertices);
 
-   //Атрибут с текстурами 
-   glEnableVertexAttribArray(basicShader->attrib("texCoord"));
-   glVertexAttribPointer(basicShader->attrib("texCoord"), 2, GL_FLOAT,
-                         false, 0, fence_tex_coords);
- 
+  glEnableVertexAttribArray(basicShader->attrib("texCoord"));
+  glVertexAttribPointer(basicShader->attrib("texCoord"), 2, GL_FLOAT, false, 0,
+                        fence_tex_coords);
 
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, fence_texture);
+  glUniform1i(basicShader->uniform("textureFence"), 0);
 
-   // Подключаю текустуру
-   glActiveTexture(GL_TEXTURE0);
-   glBindTexture(GL_TEXTURE_2D, fence_texture);
-   glUniform1i(basicShader->uniform("textureFence"), 0);
-  
-
-    glm::mat4 model = glm::mat4(1.0f);
-    model = glm::translate(model,fencePositions[fenceNumber]);
-     if ( fenceNumber > 1 ){
-              model = glm::rotate(model, angle, glm::vec3(0.0f, 1.0f, 0.0f));
-          }
-    glUniformMatrix4fv(basicShader->uniform("model"), 1, false, glm::value_ptr(model));
-    glDrawArrays(GL_TRIANGLES,0,36);
-    glDisableVertexAttribArray(basicShader->attrib("position"));
-    glDisableVertexAttribArray(basicShader->attrib("texCoord"));
-
-    
+  glm::mat4 model = glm::mat4(1.0f);
+  model = glm::translate(model, fencePositions[fenceNumber]);
+  if (fenceNumber > 1) {
+    model = glm::rotate(model, angle, glm::vec3(0.0f, 1.0f, 0.0f));
+  }
+  glUniformMatrix4fv(basicShader->uniform("model"), 1, false,
+                     glm::value_ptr(model));
+  glDrawArrays(GL_TRIANGLES, 0, 36);
+  glDisableVertexAttribArray(basicShader->attrib("position"));
+  glDisableVertexAttribArray(basicShader->attrib("texCoord"));
 }
 
-
 void generateMap() {
-  // Включаем переменные из шейдера
-  // и передаем им значения (координаты объекта, цвет, текстура...)
   glEnableVertexAttribArray(basicShader->attrib("position"));
   glVertexAttribPointer(basicShader->attrib("position"), 4, GL_FLOAT, false, 0,
                         map_vertices);
@@ -209,91 +185,73 @@ void generateMap() {
   glVertexAttribPointer(basicShader->attrib("textureCoords"), 2, GL_FLOAT,
                         false, 0, map_tex_coords);
 
-  // Подключаю текустуру
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, map_texture);
   glUniform1i(basicShader->uniform("textureMap"), 0);
 
-  // Создаем Матрицу начала координат
   glm::mat4 model = glm::mat4(1.0f);
-  // Воротим объект вокруг матрицы (в нашем случае - начала координат)
-  // можно ворототить и вокруг других объектов, просто передав их матрицу
-  // первым аргументом
   model = glm::rotate(model, 1.5708f, glm::vec3(1.0f, 0.0f, 0.0f));
-  // Передаем значения в матрицу
-  glUniformMatrix4fv(basicShader->uniform("model"), 1, false, glm::value_ptr(model));
+  glUniformMatrix4fv(basicShader->uniform("model"), 1, false,
+                     glm::value_ptr(model));
 
-  // Рисуем наш объект и освобождаем шейдер для других объектов
   glDrawArrays(GL_TRIANGLES, 0, map_vertexcount);
   glDisableVertexAttribArray(basicShader->attrib("position"));
   glDisableVertexAttribArray(basicShader->attrib("textureCoords"));
 }
 
-void lookAt()
-{
-   GLfloat currentFrame = glfwGetTime();
-   deltaTime = currentFrame - lastFrame;
-   lastFrame = currentFrame;   
+void lookAt() {
+  GLfloat currentFrame = glfwGetTime();
+  deltaTime = currentFrame - lastFrame;
+  lastFrame = currentFrame;
 
-   glm::mat4 model = glm::mat4(1.0f);
+  glm::mat4 model = glm::mat4(1.0f);
 
+  glm::mat4 view = glm::mat4(1.0f);
+  view = camera.GetViewMatrix();
+  glm::mat4 projection = glm::mat4(1.0f);
+  model = glm::rotate(model, 0.0f, glm::vec3(0.5f, 1.0f, 0.0f));
+  view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+  projection = glm::perspective(camera.Zoom, (GLfloat)WIDTH / (GLfloat)HEIGHT,
+                                0.1f, 100.0f);
 
-   glm::mat4 view = glm::mat4(1.0f);
-   view = camera.GetViewMatrix();
-   glm::mat4 projection = glm::mat4(1.0f);
-   model = glm::rotate(model, 0.0f , glm::vec3(0.5f,1.0f,0.0f));
-   view = glm::translate(view, glm::vec3(0.0f,0.0f,-3.0f));
-   projection = glm::perspective(camera.Zoom,(GLfloat)WIDTH / (GLfloat)HEIGHT, 0.1f, 100.0f);
+  // TODO Refactoring
+  GLint modelLoc = glGetUniformLocation(basicShader->shaderProgram, "model");
+  GLint viewLoc = glGetUniformLocation(basicShader->shaderProgram, "view");
+  GLint projLoc =
+      glGetUniformLocation(basicShader->shaderProgram, "projection");
 
-   // TODO Refactoring
-    GLint modelLoc = glGetUniformLocation(basicShader->shaderProgram,"model");
-   GLint viewLoc = glGetUniformLocation(basicShader->shaderProgram,"view");
-   GLint projLoc = glGetUniformLocation(basicShader->shaderProgram,"projection");
+  glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 
-     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::            value_ptr(model));
+  glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
 
-   glUniformMatrix4fv(viewLoc,1,GL_FALSE,glm::value_ptr(view));
-
-   glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
- 
-
+  glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
 }
 
-void mouse_callback(GLFWwindow* window, double xpos , double ypos)
-{
-    if (firstMouse)
-    {
-        lastX = xpos;
-        lastY = ypos;
-        firstMouse = false;
-    }
-
-    //Вычисляем смещение мыши с момента последнего кадры
-    GLfloat xoffset = xpos - lastX;
-    //Обратный порядок вычитания потому что оконные Y-координаты возрастают с верху вниз
-    GLfloat yoffset = lastY - ypos;
+void mouse_callback(GLFWwindow *window, double xpos, double ypos) {
+  if (firstMouse) {
     lastX = xpos;
     lastY = ypos;
+    firstMouse = false;
+  }
 
-    camera.ProcessMouseMovement(xoffset, yoffset);
+  GLfloat xoffset = xpos - lastX;
+  GLfloat yoffset = lastY - ypos;
+  lastX = xpos;
+  lastY = ypos;
+
+  camera.ProcessMouseMovement(xoffset, yoffset);
 }
 
-
-void do_movement()
-{
-    if(keys[GLFW_KEY_W])
-        camera.ProcessKeyboard(FORWARD,deltaTime);
-    if(keys[GLFW_KEY_S])
-        camera.ProcessKeyboard(BACKWARD,deltaTime);
-    if(keys[GLFW_KEY_A])
-        camera.ProcessKeyboard(LEFT, deltaTime);
-    if(keys[GLFW_KEY_D])
-        camera.ProcessKeyboard(RIGHT,deltaTime);
-
+void do_movement() {
+  if (keys[GLFW_KEY_W])
+    camera.ProcessKeyboard(FORWARD, deltaTime);
+  if (keys[GLFW_KEY_S])
+    camera.ProcessKeyboard(BACKWARD, deltaTime);
+  if (keys[GLFW_KEY_A])
+    camera.ProcessKeyboard(LEFT, deltaTime);
+  if (keys[GLFW_KEY_D])
+    camera.ProcessKeyboard(RIGHT, deltaTime);
 }
-
-
-
 
 GLuint loadTexture(const char *filepath) {
   GLuint texture;
