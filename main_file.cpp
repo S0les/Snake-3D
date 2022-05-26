@@ -162,7 +162,7 @@ void generateFence(int fenceNumber) {
 
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, fence_texture);
-  glUniform1i(basicShader->uniform("textureFence"), 0);
+  glUniform1i(basicShader->uniform("textureSampler"), 0);
 
   glm::mat4 model = glm::mat4(1.0f);
   model = glm::translate(model, fencePositions[fenceNumber]);
@@ -181,13 +181,13 @@ void generateMap() {
   glVertexAttribPointer(basicShader->attrib("position"), 4, GL_FLOAT, false, 0,
                         map_vertices);
 
-  glEnableVertexAttribArray(basicShader->attrib("textureCoords"));
-  glVertexAttribPointer(basicShader->attrib("textureCoords"), 2, GL_FLOAT,
+  glEnableVertexAttribArray(basicShader->attrib("texCoord"));
+  glVertexAttribPointer(basicShader->attrib("texCoord"), 2, GL_FLOAT,
                         false, 0, map_tex_coords);
 
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, map_texture);
-  glUniform1i(basicShader->uniform("textureMap"), 0);
+  glUniform1i(basicShader->uniform("textureSampler"), 0);
 
   glm::mat4 model = glm::mat4(1.0f);
   model = glm::rotate(model, 1.5708f, glm::vec3(1.0f, 0.0f, 0.0f));
@@ -196,7 +196,7 @@ void generateMap() {
 
   glDrawArrays(GL_TRIANGLES, 0, map_vertexcount);
   glDisableVertexAttribArray(basicShader->attrib("position"));
-  glDisableVertexAttribArray(basicShader->attrib("textureCoords"));
+  glDisableVertexAttribArray(basicShader->attrib("texCoord"));
 }
 
 void lookAt() {

@@ -1,16 +1,11 @@
 #version 330 core
 
-in vec3 ourColor;
-in vec2 TexCoordMap;
-in vec2 TexCoordFence;
+uniform sampler2D textureSampler;
 
-out vec4 mapColor;
-out vec4 fenceColor;
-uniform sampler2D textureMap;
-uniform sampler2D textureFence;
+in vec2 TexCoord;
+out vec4 color;
 
 void main()
 {
-	mapColor = texture(textureMap, TexCoordMap);
-    fenceColor = texture(textureFence,TexCoordFence);
+    color = texture(textureSampler, TexCoord);
 }
