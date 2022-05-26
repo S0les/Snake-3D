@@ -119,10 +119,8 @@ void drawScene(GLFWwindow *window) {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   basicShader->use();
   generateMap();
-  generateFence(0);
-  generateFence(1);
-  generateFence(2);
-  generateFence(3);
+  for (int i=0; i<4; i++)
+	  generateFence(i);
   glfwSwapBuffers(window);
   return;
 }
