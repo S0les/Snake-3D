@@ -103,7 +103,7 @@ void initOpenglProgram(GLFWwindow *window) {
   glfwSetWindowSizeCallback(window, windowResizeCallback);
   glfwSetKeyCallback(window, key_callback);
   map_texture = loadTexture("images/map-texture.png");
-  fence_texture = loadTexture("images/stone_1.jpg");
+  fence_texture = loadTexture("images/bricks.png");
   return;
 }
 
@@ -260,6 +260,9 @@ GLuint loadTexture(const char *filepath) {
   glBindTexture(GL_TEXTURE_2D, texture);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, img_width, img_height, 0, GL_RGB,
                GL_UNSIGNED_BYTE, image);
   glGenerateMipmap(GL_TEXTURE_2D);
