@@ -1,3 +1,6 @@
+#include "Camera.h"
+#include "fence.h"
+#include "map.h"
 #include "shaderprogram.h"
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -11,15 +14,33 @@
 #include <stdlib.h>
 int aspectRatio = 1;
 GLuint map_texture;
+GLuint fence_texture;
 
+const GLuint WIDTH = 1080, HEIGHT = 800;
+bool keys[1024];
+
+// Camera , function LookAt
+Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+GLfloat lastX = WIDTH / 2.0;
+GLfloat lastY = HEIGHT / 2.0;
+bool firstMouse = true;
+
+GLfloat deltaTime = 0.0f;
+GLfloat lastFrame = 0.0f;
+
+void lookAt();
 void key_callback(GLFWwindow *window, int key, int scancode, int action,
                   int mode);
+void mouse_callback(GLFWwindow *window, double xpos, double ypos);
 void windowResizeCallback(GLFWwindow *window, int width, int height);
 void initOpenglProgram(GLFWwindow *window);
 void freeOpenglProgram(GLFWwindow *window);
 void drawScene(GLFWwindow *window);
 void initWindow(GLFWwindow *window);
 void generateMap();
+void generateFence(int fenceNumber);
+void do_movement();
+
 GLuint loadTexture(const char *filepath);
 
 int main(int argc, char *argv[]) {
@@ -29,7 +50,7 @@ int main(int argc, char *argv[]) {
     exit(EXIT_FAILURE);
   }
 
-  window = glfwCreateWindow(500, 500, "Snake3D", NULL, NULL);
+  window = glfwCreateWindow(WIDTH, HEIGHT, "Snake3D", NULL, NULL);
   initWindow(window);
   glfwMakeContextCurrent(window);
   glfwSwapInterval(1);
@@ -41,11 +62,14 @@ int main(int argc, char *argv[]) {
   initShaders();
 
   initOpenglProgram(window);
-  basicShader->use();
 
   while (!glfwWindowShouldClose(window)) {
+
+    lookAt();
     drawScene(window);
+    glfwSetCursorPosCallback(window, mouse_callback);
     glfwPollEvents();
+    do_movement();
   }
 
   freeShaders();
@@ -58,6 +82,13 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action,
                   int mode) {
   if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
     glfwSetWindowShouldClose(window, GL_TRUE);
+
+  if (key >= 0 && key < 1024) {
+    if (action == GLFW_PRESS)
+      keys[key] = true;
+    else if (action == GLFW_RELEASE)
+      keys[key] = false;
+  }
 }
 
 void windowResizeCallback(GLFWwindow *window, int width, int height) {
@@ -72,18 +103,24 @@ void initOpenglProgram(GLFWwindow *window) {
   glfwSetWindowSizeCallback(window, windowResizeCallback);
   glfwSetKeyCallback(window, key_callback);
   map_texture = loadTexture("images/map-texture.png");
+  fence_texture = loadTexture("images/bricks.png");
   return;
 }
 
 void freeOpenglProgram(GLFWwindow *window) {
   glDeleteTextures(1, &map_texture);
+  glDeleteTextures(1, &fence_texture);
   glfwDestroyWindow(window);
   return;
 }
 
 void drawScene(GLFWwindow *window) {
+  glEnable(GL_DEPTH_TEST);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  basicShader->use();
   generateMap();
+  for (int i = 0; i < 4; i++)
+    generateFence(i);
   glfwSwapBuffers(window);
   return;
 }
@@ -107,41 +144,106 @@ void initWindow(GLFWwindow *window) {
 }
 
 void generateMap() {
-  // TODO Move definition part of code to the header file
-  float vertices[] = {
-      1.0f, -1.0f, 0.0f,  1.0f,  -1.0f, 1.0f,
-      0.0f, 1.0f,  -1.0f, -1.0f, 0.0f,  1.0f,
-
-      1.0f, -1.0f, 0.0f,  1.0f,  1.0f,  1.0f,
-      0.0f, 1.0f,  -1.0f, 1.0f,  0.0f,  1.0f,
-  };
-
-  float tex_coords[] = {
-      3.0f, 0.0f, 0.0f, 3.0f, 0.0f, 0.0f, 3.0f, 0.0f, 3.0f, 3.0f, 0.0f, 3.0f,
-  };
-
-  int vertexcount = 6;
-
   glEnableVertexAttribArray(basicShader->attrib("position"));
   glVertexAttribPointer(basicShader->attrib("position"), 4, GL_FLOAT, false, 0,
-                        vertices);
+                        map_vertices);
 
-  glEnableVertexAttribArray(basicShader->attrib("textureCoords"));
-  glVertexAttribPointer(basicShader->attrib("textureCoords"), 2, GL_FLOAT,
-                        false, 0, tex_coords);
+  glEnableVertexAttribArray(basicShader->attrib("texCoord"));
+  glVertexAttribPointer(basicShader->attrib("texCoord"), 2, GL_FLOAT, false, 0,
+                        map_tex_coords);
 
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, map_texture);
-  glUniform1i(basicShader->uniform("textureMap"), 0);
+  glUniform1i(basicShader->uniform("textureSampler"), 0);
 
-  glDrawArrays(GL_TRIANGLES, 0, vertexcount);
+  glm::mat4 model = glm::mat4(1.0f);
+  model = glm::rotate(model, 1.5708f, glm::vec3(1.0f, 0.0f, 0.0f));
+  glUniformMatrix4fv(basicShader->uniform("model"), 1, false,
+                     glm::value_ptr(model));
+
+  glDrawArrays(GL_TRIANGLES, 0, map_vertexcount);
   glDisableVertexAttribArray(basicShader->attrib("position"));
-  glDisableVertexAttribArray(basicShader->attrib("textureCoords"));
+  glDisableVertexAttribArray(basicShader->attrib("texCoord"));
+}
 
-  glm::mat4 transform = glm::mat4(1.0f);
-  transform = glm::rotate(transform, 1.5708f, glm::vec3(1.0f, 0.0f, 0.0f));
-  glUniformMatrix4fv(basicShader->uniform("Transform"), 1, false,
-                     glm::value_ptr(transform));
+void generateFence(int fenceNumber) {
+  glEnableVertexAttribArray(basicShader->attrib("position"));
+  glVertexAttribPointer(basicShader->attrib("position"), 4, GL_FLOAT, false, 0,
+                        fence_vertices);
+
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, fence_texture);
+  glUniform1i(basicShader->uniform("textureSampler"), 0);
+
+  glm::mat4 model = glm::mat4(1.0f);
+  model = glm::translate(model, fencePositions[fenceNumber]);
+  if (fenceNumber > 1)
+    model = glm::rotate(model, 1.57f, glm::vec3(0.0f, 1.0f, 0.0f));
+  model = glm::scale(model, glm::vec3(10.0f, 0.5F, 0.1f));
+  glUniformMatrix4fv(basicShader->uniform("model"), 1, false,
+                     glm::value_ptr(model));
+
+  glEnableVertexAttribArray(basicShader->attrib("texCoord"));
+  glVertexAttribPointer(basicShader->attrib("texCoord"), 2, GL_FLOAT, false, 0,
+                        fence_tex_coords);
+
+  glDrawArrays(GL_TRIANGLES, 0, fence_vertexcount);
+  glDisableVertexAttribArray(basicShader->attrib("position"));
+  glDisableVertexAttribArray(basicShader->attrib("texCoord"));
+}
+
+void lookAt() {
+  GLfloat currentFrame = glfwGetTime();
+  deltaTime = currentFrame - lastFrame;
+  lastFrame = currentFrame;
+
+  glm::mat4 model = glm::mat4(1.0f);
+
+  glm::mat4 view = glm::mat4(1.0f);
+  view = camera.GetViewMatrix();
+  glm::mat4 projection = glm::mat4(1.0f);
+  model = glm::rotate(model, 0.0f, glm::vec3(0.5f, 1.0f, 0.0f));
+  view = glm::translate(view, glm::vec3(0.0f, -5.0f, -3.0f));
+  projection = glm::perspective(camera.Zoom, (GLfloat)WIDTH / (GLfloat)HEIGHT,
+                                0.1f, 100.0f);
+
+  // TODO Refactoring
+  GLint modelLoc = glGetUniformLocation(basicShader->shaderProgram, "model");
+  GLint viewLoc = glGetUniformLocation(basicShader->shaderProgram, "view");
+  GLint projLoc =
+      glGetUniformLocation(basicShader->shaderProgram, "projection");
+
+  glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+
+  glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+
+  glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
+}
+
+void mouse_callback(GLFWwindow *window, double xpos, double ypos) {
+  if (firstMouse) {
+    lastX = xpos;
+    lastY = ypos;
+    firstMouse = false;
+  }
+
+  GLfloat xoffset = xpos - lastX;
+  GLfloat yoffset = lastY - ypos;
+  lastX = xpos;
+  lastY = ypos;
+
+  camera.ProcessMouseMovement(xoffset, yoffset);
+}
+
+void do_movement() {
+  if (keys[GLFW_KEY_W])
+    camera.ProcessKeyboard(FORWARD, deltaTime);
+  if (keys[GLFW_KEY_S])
+    camera.ProcessKeyboard(BACKWARD, deltaTime);
+  if (keys[GLFW_KEY_A])
+    camera.ProcessKeyboard(LEFT, deltaTime);
+  if (keys[GLFW_KEY_D])
+    camera.ProcessKeyboard(RIGHT, deltaTime);
 }
 
 GLuint loadTexture(const char *filepath) {
@@ -153,6 +255,9 @@ GLuint loadTexture(const char *filepath) {
   glBindTexture(GL_TEXTURE_2D, texture);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, img_width, img_height, 0, GL_RGB,
                GL_UNSIGNED_BYTE, image);
   glGenerateMipmap(GL_TEXTURE_2D);
