@@ -1,7 +1,6 @@
 #include "Camera.h"
 #include "fence.h"
 #include "map.h"
-#include "cube.h"
 #include "shaderprogram.h"
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -39,7 +38,6 @@ void freeOpenglProgram(GLFWwindow *window);
 void drawScene(GLFWwindow *window);
 void initWindow(GLFWwindow *window);
 void generateMap();
-void generateCube();
 void generateFence(int fenceNumber);
 void do_movement();
 
@@ -121,7 +119,6 @@ void drawScene(GLFWwindow *window) {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   basicShader->use();
   generateMap();
-  generateCube();
   for (int i = 0; i < 4; i++)
     generateFence(i);
   glfwSwapBuffers(window);
@@ -144,37 +141,6 @@ void initWindow(GLFWwindow *window) {
   }
   load_favicon(window);
   return;
-}
-
-void generateFence(int fenceNumber) {
-  glm::vec3 fencePositions[] = {
-      glm::vec3(-0.0f, 0.5f, -10.0f), glm::vec3(0.0f, 0.5f, 10.0f),
-      glm::vec3(-10.0f, 0.5f, 0.f), glm::vec3(10.0f, 0.5, 0.0f)};
-
-  GLfloat angle = 1.57f;
-
-  glEnableVertexAttribArray(basicShader->attrib("position"));
-  glVertexAttribPointer(basicShader->attrib("position"), 4, GL_FLOAT, false, 0,
-                        fence_vertices);
-
-  glEnableVertexAttribArray(basicShader->attrib("texCoord"));
-  glVertexAttribPointer(basicShader->attrib("texCoord"), 2, GL_FLOAT, false, 0,
-                        fence_tex_coords);
-
-  glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, fence_texture);
-  glUniform1i(basicShader->uniform("textureSampler"), 0);
-
-  glm::mat4 model = glm::mat4(1.0f);
-  model = glm::translate(model, fencePositions[fenceNumber]);
-  if (fenceNumber > 1) {
-    model = glm::rotate(model, angle, glm::vec3(0.0f, 1.0f, 0.0f));
-  }
-  glUniformMatrix4fv(basicShader->uniform("model"), 1, false,
-                     glm::value_ptr(model));
-  glDrawArrays(GL_TRIANGLES, 0, 36);
-  glDisableVertexAttribArray(basicShader->attrib("position"));
-  glDisableVertexAttribArray(basicShader->attrib("texCoord"));
 }
 
 void generateMap() {
@@ -200,27 +166,28 @@ void generateMap() {
   glDisableVertexAttribArray(basicShader->attrib("texCoord"));
 }
 
-
-void generateCube() {
+void generateFence(int fenceNumber) {
   glEnableVertexAttribArray(basicShader->attrib("position"));
   glVertexAttribPointer(basicShader->attrib("position"), 4, GL_FLOAT, false, 0,
-                        cube_vertices);
+                        fence_vertices);
 
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, fence_texture);
   glUniform1i(basicShader->uniform("textureSampler"), 0);
 
   glm::mat4 model = glm::mat4(1.0f);
-  model = glm::translate(model, glm::vec3(0.0f, 5.0f, 0.0f));
-  model = glm::scale(model, glm::vec3(10.0f, 0.5f, 0.1f));
+  model = glm::translate(model, fencePositions[fenceNumber]);
+  if (fenceNumber > 1)
+    model = glm::rotate(model, 1.57f, glm::vec3(0.0f, 1.0f, 0.0f));
+  model = glm::scale(model, glm::vec3(10.0f, 0.5F, 0.1f));
   glUniformMatrix4fv(basicShader->uniform("model"), 1, false,
                      glm::value_ptr(model));
 
   glEnableVertexAttribArray(basicShader->attrib("texCoord"));
   glVertexAttribPointer(basicShader->attrib("texCoord"), 2, GL_FLOAT, false, 0,
-                        cube_tex_coords);
+                        fence_tex_coords);
 
-  glDrawArrays(GL_TRIANGLES, 0, cube_vertexcount);
+  glDrawArrays(GL_TRIANGLES, 0, fence_vertexcount);
   glDisableVertexAttribArray(basicShader->attrib("position"));
   glDisableVertexAttribArray(basicShader->attrib("texCoord"));
 }
