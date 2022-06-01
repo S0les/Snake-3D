@@ -1,6 +1,7 @@
 #include "Camera.h"
 #include "fence.h"
 #include "map.h"
+#include "cube.h"
 #include "shaderprogram.h"
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -38,6 +39,7 @@ void freeOpenglProgram(GLFWwindow *window);
 void drawScene(GLFWwindow *window);
 void initWindow(GLFWwindow *window);
 void generateMap();
+void generateCube();
 void generateFence(int fenceNumber);
 void do_movement();
 
@@ -119,8 +121,9 @@ void drawScene(GLFWwindow *window) {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   basicShader->use();
   generateMap();
-  for (int i=0; i<4; i++)
-	  generateFence(i);
+  generateCube();
+  for (int i = 0; i < 4; i++)
+    generateFence(i);
   glfwSwapBuffers(window);
   return;
 }
@@ -180,8 +183,8 @@ void generateMap() {
                         map_vertices);
 
   glEnableVertexAttribArray(basicShader->attrib("texCoord"));
-  glVertexAttribPointer(basicShader->attrib("texCoord"), 2, GL_FLOAT,
-                        false, 0, map_tex_coords);
+  glVertexAttribPointer(basicShader->attrib("texCoord"), 2, GL_FLOAT, false, 0,
+                        map_tex_coords);
 
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, map_texture);
@@ -193,6 +196,31 @@ void generateMap() {
                      glm::value_ptr(model));
 
   glDrawArrays(GL_TRIANGLES, 0, map_vertexcount);
+  glDisableVertexAttribArray(basicShader->attrib("position"));
+  glDisableVertexAttribArray(basicShader->attrib("texCoord"));
+}
+
+
+void generateCube() {
+  glEnableVertexAttribArray(basicShader->attrib("position"));
+  glVertexAttribPointer(basicShader->attrib("position"), 4, GL_FLOAT, false, 0,
+                        cube_vertices);
+
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, fence_texture);
+  glUniform1i(basicShader->uniform("textureSampler"), 0);
+
+  glm::mat4 model = glm::mat4(1.0f);
+  model = glm::translate(model, glm::vec3(0.0f, 5.0f, 0.0f));
+  model = glm::scale(model, glm::vec3(10.0f, 0.5f, 0.1f));
+  glUniformMatrix4fv(basicShader->uniform("model"), 1, false,
+                     glm::value_ptr(model));
+
+  glEnableVertexAttribArray(basicShader->attrib("texCoord"));
+  glVertexAttribPointer(basicShader->attrib("texCoord"), 2, GL_FLOAT, false, 0,
+                        cube_tex_coords);
+
+  glDrawArrays(GL_TRIANGLES, 0, cube_vertexcount);
   glDisableVertexAttribArray(basicShader->attrib("position"));
   glDisableVertexAttribArray(basicShader->attrib("texCoord"));
 }
@@ -260,8 +288,8 @@ GLuint loadTexture(const char *filepath) {
   glBindTexture(GL_TEXTURE_2D, texture);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, img_width, img_height, 0, GL_RGB,
                GL_UNSIGNED_BYTE, image);
