@@ -1,6 +1,6 @@
 #include "Camera.h"
-#include "fence.h"
 #include "cube.h"
+#include "fence.h"
 #include "map.h"
 #include "shaderprogram.h"
 #include <GL/glew.h>
@@ -15,7 +15,10 @@
 #include <iostream>
 #include <stdlib.h>
 int aspectRatio = 1;
-float distance = 0.0f;
+int state = 1;
+int coord_index = 1;
+float distance = -0.05f;
+float snake_coords[2] = {0.311f, 0.311f};
 GLuint map_texture;
 GLuint fence_texture;
 GLuint snake_texture;
@@ -74,10 +77,7 @@ int main(int argc, char *argv[]) {
     drawScene(window);
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwPollEvents();
-    // do_movement();
-    distance -= 0.02f;
-    if (-1.0 * distance > 9.4f)
-	    distance = 0.f;
+    do_movement();
   }
 
   freeShaders();
@@ -91,12 +91,26 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action,
   if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
     glfwSetWindowShouldClose(window, GL_TRUE);
 
-  if (key >= 0 && key < 1024) {
-    if (action == GLFW_PRESS)
-      keys[key] = true;
-    else if (action == GLFW_RELEASE)
-      keys[key] = false;
+  if ((key == GLFW_KEY_D) && action == GLFW_PRESS) {
+    if (state == 1)
+      distance *= -1.0f;
+    coord_index = (coord_index + 1) % 2;
+    state = (state + 1) % 2;
   }
+
+  if ((key == GLFW_KEY_A) && action == GLFW_PRESS) {
+    if (state == 0)
+      distance *= -1.0f;
+    coord_index = (coord_index + 1) % 2;
+    state = (state + 1) % 2;
+  }
+
+  //  if (key >= 0 && key < 1024) {
+  //    if (action == GLFW_PRESS)
+  //      keys[key] = true;
+  //    else if (action == GLFW_RELEASE)
+  //      keys[key] = false;
+  // }
 }
 
 void windowResizeCallback(GLFWwindow *window, int width, int height) {
@@ -131,6 +145,12 @@ void drawScene(GLFWwindow *window) {
   for (int i = 0; i < 4; i++)
     generateFence(i);
   generateSnake();
+  snake_coords[coord_index] += distance;
+  if (abs(snake_coords[coord_index]) >= 9.75f) {
+    snake_coords[0] = 0.311f;
+    snake_coords[1] = 0.311f;
+  }
+  printf("%f\n", snake_coords[0]);
   glfwSwapBuffers(window);
   return;
 }
@@ -212,7 +232,8 @@ void generateSnake(void) {
   glUniform1i(basicShader->uniform("textureSampler"), 0);
 
   glm::mat4 model = glm::mat4(1.0f);
-  model = glm::translate(model, glm::vec3(0.311f, 0.311f, 0.311f));
+  model = glm::translate(model,
+                         glm::vec3(snake_coords[0], 0.311f, snake_coords[1]));
   model = glm::scale(model, glm::vec3(0.311f, 0.311f, 0.311f));
   glUniformMatrix4fv(basicShader->uniform("model"), 1, false,
                      glm::value_ptr(model));
