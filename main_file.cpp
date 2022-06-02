@@ -1,5 +1,6 @@
 #include "Camera.h"
 #include "fence.h"
+#include "cube.h"
 #include "map.h"
 #include "shaderprogram.h"
 #include <GL/glew.h>
@@ -7,14 +8,17 @@
 #include <SOIL/SOIL.h>
 #include <cmath>
 #include <cstdint>
+#include <glm/ext/matrix_transform.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 #include <stdlib.h>
 int aspectRatio = 1;
+float distance = 0.0f;
 GLuint map_texture;
 GLuint fence_texture;
+GLuint snake_texture;
 
 const GLuint WIDTH = 1080, HEIGHT = 800;
 bool keys[1024];
@@ -37,9 +41,10 @@ void initOpenglProgram(GLFWwindow *window);
 void freeOpenglProgram(GLFWwindow *window);
 void drawScene(GLFWwindow *window);
 void initWindow(GLFWwindow *window);
-void generateMap();
+void generateMap(void);
+void generateSnake(void);
 void generateFence(int fenceNumber);
-void do_movement();
+void do_movement(void);
 
 GLuint loadTexture(const char *filepath);
 
@@ -69,7 +74,10 @@ int main(int argc, char *argv[]) {
     drawScene(window);
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwPollEvents();
-    do_movement();
+    // do_movement();
+    distance -= 0.02f;
+    if (-1.0 * distance > 9.4f)
+	    distance = 0.f;
   }
 
   freeShaders();
@@ -104,6 +112,7 @@ void initOpenglProgram(GLFWwindow *window) {
   glfwSetKeyCallback(window, key_callback);
   map_texture = loadTexture("images/map-texture.png");
   fence_texture = loadTexture("images/bricks.png");
+  snake_texture = loadTexture("images/snake.jpg");
   return;
 }
 
@@ -121,6 +130,7 @@ void drawScene(GLFWwindow *window) {
   generateMap();
   for (int i = 0; i < 4; i++)
     generateFence(i);
+  generateSnake();
   glfwSwapBuffers(window);
   return;
 }
@@ -143,7 +153,7 @@ void initWindow(GLFWwindow *window) {
   return;
 }
 
-void generateMap() {
+void generateMap(void) {
   glEnableVertexAttribArray(basicShader->attrib("position"));
   glVertexAttribPointer(basicShader->attrib("position"), 4, GL_FLOAT, false, 0,
                         map_vertices);
@@ -192,6 +202,30 @@ void generateFence(int fenceNumber) {
   glDisableVertexAttribArray(basicShader->attrib("texCoord"));
 }
 
+void generateSnake(void) {
+  glEnableVertexAttribArray(basicShader->attrib("position"));
+  glVertexAttribPointer(basicShader->attrib("position"), 4, GL_FLOAT, false, 0,
+                        cube_vertices);
+
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, snake_texture);
+  glUniform1i(basicShader->uniform("textureSampler"), 0);
+
+  glm::mat4 model = glm::mat4(1.0f);
+  model = glm::translate(model, glm::vec3(0.311f, 0.311f, 0.311f));
+  model = glm::scale(model, glm::vec3(0.311f, 0.311f, 0.311f));
+  glUniformMatrix4fv(basicShader->uniform("model"), 1, false,
+                     glm::value_ptr(model));
+
+  glEnableVertexAttribArray(basicShader->attrib("texCoord"));
+  glVertexAttribPointer(basicShader->attrib("texCoord"), 2, GL_FLOAT, false, 0,
+                        cube_tex_coords);
+
+  glDrawArrays(GL_TRIANGLES, 0, cube_vertexcount);
+  glDisableVertexAttribArray(basicShader->attrib("position"));
+  glDisableVertexAttribArray(basicShader->attrib("texCoord"));
+}
+
 void lookAt() {
   GLfloat currentFrame = glfwGetTime();
   deltaTime = currentFrame - lastFrame;
@@ -203,7 +237,8 @@ void lookAt() {
   view = camera.GetViewMatrix();
   glm::mat4 projection = glm::mat4(1.0f);
   model = glm::rotate(model, 0.0f, glm::vec3(0.5f, 1.0f, 0.0f));
-  view = glm::translate(view, glm::vec3(0.0f, -5.0f, -3.0f));
+  view = glm::rotate(view, 1.5708f, glm::vec3(1.0f, 0.0f, 0.0f));
+  view = glm::translate(view, glm::vec3(0.0f, -20.0f, 0.0f));
   projection = glm::perspective(camera.Zoom, (GLfloat)WIDTH / (GLfloat)HEIGHT,
                                 0.1f, 100.0f);
 
