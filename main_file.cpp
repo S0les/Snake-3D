@@ -14,12 +14,13 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 #include <stdlib.h>
+#include <bits/stdc++.h>
 int aspectRatio = 1;
 int state = 1;
 int coord_index = 1;
 float distance = -0.05f;
 float rotate_angle = 0.f;
-float snake_coords[2] = {0.311f, 0.311f};
+float snake_coords[2] = {0.f, 0.f};
 GLuint map_texture;
 GLuint fence_texture;
 GLuint snake_texture;
@@ -49,6 +50,7 @@ void generateMap(void);
 void generateSnake(void);
 void generateFence(int fenceNumber);
 void do_movement(void);
+void update_direction(float angle);
 
 GLuint loadTexture(const char *filepath);
 
@@ -95,27 +97,13 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action,
   if ((key == GLFW_KEY_D) && action == GLFW_PRESS) {
     if (state == 1)
       distance *= -1.0f;
-    snake_coords[coord_index] = (int)(snake_coords[coord_index] / 0.311f) * 0.311f;
-    coord_index = (coord_index + 1) % 2;
-    state = (state + 1) % 2;
-    rotate_angle += 1.5708f;
-    snake_coords[coord_index] = (int)(snake_coords[coord_index] / 0.311f) * 0.311f;
-    for (int i = 0; i < 2; i++)
-        printf("%f\n", snake_coords[i]);
-    printf("\n");
+    update_direction(1.5708f);
   }
 
   if ((key == GLFW_KEY_A) && action == GLFW_PRESS) {
     if (state == 0)
       distance *= -1.0f;
-    snake_coords[coord_index] = (int)(snake_coords[coord_index] / 0.311f) * 0.311f;
-    coord_index = (coord_index + 1) % 2;
-    state = (state + 1) % 2;
-    rotate_angle -= 1.5708f;
-    snake_coords[coord_index] = (int)(snake_coords[coord_index] / 0.311f) * 0.311f;
-    for (int i = 0; i < 2; i++)
-        printf("%f\n", snake_coords[i]);
-    printf("\n");
+    update_direction(-1.5708f);
   }
 
   //  if (key >= 0 && key < 1024) {
@@ -159,9 +147,9 @@ void drawScene(GLFWwindow *window) {
     generateFence(i);
   snake_coords[coord_index] += distance;
   generateSnake();
-  if (abs(snake_coords[coord_index]) >= 9.75f) {
-    snake_coords[0] = 0.311f;
-    snake_coords[1] = 0.311f;
+  if (abs(snake_coords[coord_index]) >= 10.1f) {
+    snake_coords[0] = 0.f;
+    snake_coords[1] = 0.f;
   }
   glfwSwapBuffers(window);
   return;
@@ -199,6 +187,7 @@ void generateMap(void) {
   glUniform1i(basicShader->uniform("textureSampler"), 0);
 
   glm::mat4 model = glm::mat4(1.0f);
+  model = glm::translate(model, glm::vec3(-0.311f, 0.0f, -0.311f));
   model = glm::rotate(model, 1.5708f, glm::vec3(1.0f, 0.0f, 0.0f));
   glUniformMatrix4fv(basicShader->uniform("model"), 1, false,
                      glm::value_ptr(model));
@@ -273,7 +262,8 @@ void lookAt() {
   model = glm::rotate(model, 0.0f, glm::vec3(0.5f, 1.0f, 0.0f));
   // view = glm::rotate(view, 1.5708f, glm::vec3(1.0f, 0.0f, 0.0f));
   view = glm::rotate(view, rotate_angle, glm::vec3(0.0f, 1.0f, 0.0f));
-  view = glm::translate(view, glm::vec3(-snake_coords[0], -1.f, -snake_coords[1]));
+  view =
+      glm::translate(view, glm::vec3(-snake_coords[0], -1.f, -snake_coords[1]));
   // view = glm::translate(view, glm::vec3(0.0f, -20.0f, 0.0f));
   projection = glm::perspective(camera.Zoom, (GLfloat)WIDTH / (GLfloat)HEIGHT,
                                 0.1f, 100.0f);
@@ -336,3 +326,16 @@ GLuint loadTexture(const char *filepath) {
   SOIL_free_image_data(image);
   return texture;
 }
+
+void update_direction(float angle) {
+  snake_coords[coord_index] =
+      ((int)(snake_coords[coord_index] / 0.62f)) * 0.622f;
+  coord_index = (coord_index + 1) % 2;
+  state = (state + 1) % 2;
+  rotate_angle += angle; 
+  snake_coords[coord_index] =
+      (int)(snake_coords[coord_index] / 0.622f) * 1.f;
+  printf("%f ", snake_coords[coord_index]);
+  snake_coords[coord_index] *= 0.622f;
+  printf("%f %f\n\n",snake_coords[0], snake_coords[1]);
+};
