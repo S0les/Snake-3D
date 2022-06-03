@@ -18,6 +18,7 @@ int aspectRatio = 1;
 int state = 1;
 int coord_index = 1;
 float distance = -0.05f;
+float rotate_angle = 0.f;
 float snake_coords[2] = {0.311f, 0.311f};
 GLuint map_texture;
 GLuint fence_texture;
@@ -94,15 +95,27 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action,
   if ((key == GLFW_KEY_D) && action == GLFW_PRESS) {
     if (state == 1)
       distance *= -1.0f;
+    snake_coords[coord_index] = (int)(snake_coords[coord_index] / 0.311f) * 0.311f;
     coord_index = (coord_index + 1) % 2;
     state = (state + 1) % 2;
+    rotate_angle += 1.5708f;
+    snake_coords[coord_index] = (int)(snake_coords[coord_index] / 0.311f) * 0.311f;
+    for (int i = 0; i < 2; i++)
+        printf("%f\n", snake_coords[i]);
+    printf("\n");
   }
 
   if ((key == GLFW_KEY_A) && action == GLFW_PRESS) {
     if (state == 0)
       distance *= -1.0f;
+    snake_coords[coord_index] = (int)(snake_coords[coord_index] / 0.311f) * 0.311f;
     coord_index = (coord_index + 1) % 2;
     state = (state + 1) % 2;
+    rotate_angle -= 1.5708f;
+    snake_coords[coord_index] = (int)(snake_coords[coord_index] / 0.311f) * 0.311f;
+    for (int i = 0; i < 2; i++)
+        printf("%f\n", snake_coords[i]);
+    printf("\n");
   }
 
   //  if (key >= 0 && key < 1024) {
@@ -144,13 +157,12 @@ void drawScene(GLFWwindow *window) {
   generateMap();
   for (int i = 0; i < 4; i++)
     generateFence(i);
-  generateSnake();
   snake_coords[coord_index] += distance;
+  generateSnake();
   if (abs(snake_coords[coord_index]) >= 9.75f) {
     snake_coords[0] = 0.311f;
     snake_coords[1] = 0.311f;
   }
-  printf("%f\n", snake_coords[0]);
   glfwSwapBuffers(window);
   return;
 }
@@ -235,6 +247,7 @@ void generateSnake(void) {
   model = glm::translate(model,
                          glm::vec3(snake_coords[0], 0.311f, snake_coords[1]));
   model = glm::scale(model, glm::vec3(0.311f, 0.311f, 0.311f));
+  model = glm::rotate(model, -rotate_angle, glm::vec3(0.f, 1.f, 0.f));
   glUniformMatrix4fv(basicShader->uniform("model"), 1, false,
                      glm::value_ptr(model));
 
@@ -258,8 +271,10 @@ void lookAt() {
   view = camera.GetViewMatrix();
   glm::mat4 projection = glm::mat4(1.0f);
   model = glm::rotate(model, 0.0f, glm::vec3(0.5f, 1.0f, 0.0f));
-  view = glm::rotate(view, 1.5708f, glm::vec3(1.0f, 0.0f, 0.0f));
-  view = glm::translate(view, glm::vec3(0.0f, -20.0f, 0.0f));
+  // view = glm::rotate(view, 1.5708f, glm::vec3(1.0f, 0.0f, 0.0f));
+  view = glm::rotate(view, rotate_angle, glm::vec3(0.0f, 1.0f, 0.0f));
+  view = glm::translate(view, glm::vec3(-snake_coords[0], -1.f, -snake_coords[1]));
+  // view = glm::translate(view, glm::vec3(0.0f, -20.0f, 0.0f));
   projection = glm::perspective(camera.Zoom, (GLfloat)WIDTH / (GLfloat)HEIGHT,
                                 0.1f, 100.0f);
 
