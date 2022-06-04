@@ -124,6 +124,7 @@ void windowResizeCallback(GLFWwindow *window, int width, int height) {
 void initOpenglProgram(GLFWwindow *window) {
   glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
   glfwSetWindowSizeCallback(window, windowResizeCallback);
+  glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
   glfwSetKeyCallback(window, key_callback);
   map_texture = loadTexture("images/map-texture.png");
   fence_texture = loadTexture("images/bricks.png");
@@ -147,7 +148,7 @@ void drawScene(GLFWwindow *window) {
     generateFence(i);
   snake_coords[coord_index] += distance;
   generateSnake();
-  if (abs(snake_coords[coord_index]) >= 10.1f) {
+  if (abs(snake_coords[coord_index]) >= 10.f) {
     snake_coords[0] = 0.f;
     snake_coords[1] = 0.f;
   }
