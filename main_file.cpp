@@ -160,7 +160,6 @@ void drawScene(GLFWwindow *window) {
   glEnable(GL_DEPTH_TEST);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   basicShader->use();
-  lookAt();
   generateMap();
   for (int i = 0; i < 4; i++) {
     generateFence(i);
