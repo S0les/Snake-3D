@@ -9,12 +9,19 @@
 #include <bits/stdc++.h>
 #include <cmath>
 #include <cstdint>
+#include <cstdio>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 #include <stdlib.h>
+struct SnakeInfo {
+  float rotate_angle;
+  float snake_coords[2];
+  GLuint texture;
+} snakeData[1024];
+int total_snake = 1;
 int aspectRatio = 1;
 int state = 1;
 int coord_index = 1;
@@ -24,7 +31,6 @@ float snake_coords[2] = {0.f, 0.f};
 GLuint map_texture;
 GLuint fence_texture;
 GLuint snake_texture;
-
 const GLuint WIDTH = 1080, HEIGHT = 800;
 bool keys[1024];
 
@@ -95,15 +101,15 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action,
     glfwSetWindowShouldClose(window, GL_TRUE);
 
   if ((key == GLFW_KEY_D) && action == GLFW_PRESS) {
+    update_direction(1.5708f);
     if (state == 1)
       distance *= -1.0f;
-    update_direction(1.5708f);
   }
 
   if ((key == GLFW_KEY_A) && action == GLFW_PRESS) {
+    update_direction(-1.5708f);
     if (state == 0)
       distance *= -1.0f;
-    update_direction(-1.5708f);
   }
 
   //  if (key >= 0 && key < 1024) {
@@ -129,6 +135,12 @@ void initOpenglProgram(GLFWwindow *window) {
   map_texture = loadTexture("images/map-texture.png");
   fence_texture = loadTexture("images/bricks.png");
   snake_texture = loadTexture("images/snake.jpg");
+  for (int i = 0; i < 1024; i++) {
+    for (int j = 0; j < 2; j++)
+      snakeData[i].snake_coords[j] = 0.f;
+    snakeData[i].texture = snake_texture;
+  }
+  snakeData[1].snake_coords[1] = -0.622;
   return;
 }
 
@@ -146,16 +158,21 @@ void drawScene(GLFWwindow *window) {
   generateMap();
   for (int i = 0; i < 4; i++)
     generateFence(i);
-  snake_coords[coord_index] += distance;
+  for (int i = 0; i < total_snake; i++)
+    snakeData[i].snake_coords[coord_index] += distance;
   generateSnake();
   for (int i = 0; i < 2; i++) {
-    if (snake_coords[i] > 9.49f || snake_coords[i] < -10.12f) {
-      snake_coords[0] = 0.f;
-      snake_coords[1] = 0.f;
+    if (snakeData[0].snake_coords[i] > 9.49f ||
+        snakeData[0].snake_coords[i] < -10.12f) {
+      for (int j = 0; j < total_snake; j++) {
+        snakeData[j].snake_coords[0] = 0.f;
+        snakeData[j].snake_coords[1] = 0.f + 0.625 * j;
+      }
       coord_index = 1;
       state = 1;
-      rotate_angle = 0.f;
+      snakeData[0].rotate_angle = 0.f;
       distance = -0.05f;
+      total_snake = 1;
     }
   }
   glfwSwapBuffers(window);
@@ -231,29 +248,33 @@ void generateFence(int fenceNumber) {
 }
 
 void generateSnake(void) {
-  glEnableVertexAttribArray(basicShader->attrib("position"));
-  glVertexAttribPointer(basicShader->attrib("position"), 4, GL_FLOAT, false, 0,
-                        cube_vertices);
+  for (int i = 0; i < total_snake; i++) {
+    glEnableVertexAttribArray(basicShader->attrib("position"));
+    glVertexAttribPointer(basicShader->attrib("position"), 4, GL_FLOAT, false,
+                          0, cube_vertices);
 
-  glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, snake_texture);
-  glUniform1i(basicShader->uniform("textureSampler"), 0);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, snakeData[i].texture);
+    glUniform1i(basicShader->uniform("textureSampler"), 0);
 
-  glm::mat4 model = glm::mat4(1.0f);
-  model = glm::translate(model,
-                         glm::vec3(snake_coords[0], 0.311f, snake_coords[1]));
-  model = glm::scale(model, glm::vec3(0.311f, 0.311f, 0.311f));
-  model = glm::rotate(model, -rotate_angle, glm::vec3(0.f, 1.f, 0.f));
-  glUniformMatrix4fv(basicShader->uniform("model"), 1, false,
-                     glm::value_ptr(model));
+    glm::mat4 model = glm::mat4(1.0f);
+    model =
+        glm::translate(model, glm::vec3(snakeData[i].snake_coords[0], 0.311f,
+                                        snakeData[i].snake_coords[1]));
+    model = glm::scale(model, glm::vec3(0.311f, 0.311f, 0.311f));
+    model = glm::rotate(model, -snakeData[i].rotate_angle,
+                        glm::vec3(0.f, 1.f, 0.f));
+    glUniformMatrix4fv(basicShader->uniform("model"), 1, false,
+                       glm::value_ptr(model));
 
-  glEnableVertexAttribArray(basicShader->attrib("texCoord"));
-  glVertexAttribPointer(basicShader->attrib("texCoord"), 2, GL_FLOAT, false, 0,
-                        cube_tex_coords);
+    glEnableVertexAttribArray(basicShader->attrib("texCoord"));
+    glVertexAttribPointer(basicShader->attrib("texCoord"), 2, GL_FLOAT, false,
+                          0, cube_tex_coords);
 
-  glDrawArrays(GL_TRIANGLES, 0, cube_vertexcount);
-  glDisableVertexAttribArray(basicShader->attrib("position"));
-  glDisableVertexAttribArray(basicShader->attrib("texCoord"));
+    glDrawArrays(GL_TRIANGLES, 0, cube_vertexcount);
+    glDisableVertexAttribArray(basicShader->attrib("position"));
+    glDisableVertexAttribArray(basicShader->attrib("texCoord"));
+  }
 }
 
 void lookAt() {
@@ -267,11 +288,11 @@ void lookAt() {
   view = camera.GetViewMatrix();
   glm::mat4 projection = glm::mat4(1.0f);
   model = glm::rotate(model, 0.0f, glm::vec3(0.5f, 1.0f, 0.0f));
-  view = glm::rotate(view, rotate_angle, glm::vec3(0.0f, 1.0f, 0.0f));
-  view = glm::translate(view,
-                        glm::vec3(-snake_coords[0], -1.2f, -snake_coords[1]));
-  // view = glm::rotate(view, 1.5708f, glm::vec3(1.0f, 0.0f, 0.0f));
-  // view = glm::translate(view, glm::vec3(0.0f, -20.0f, 0.0f));
+  // view = glm::rotate(view, rotate_angle, glm::vec3(0.0f, 1.0f, 0.0f));
+  // view = glm::translate(view, glm::vec3(-snakeData[0].snake_coords[0], -1.2f,
+  //                                     -snakeData[0].snake_coords[1]));
+  view = glm::rotate(view, 1.5708f, glm::vec3(1.0f, 0.0f, 0.0f));
+  view = glm::translate(view, glm::vec3(0.0f, -20.0f, 0.0f));
   projection = glm::perspective(camera.Zoom, (GLfloat)WIDTH / (GLfloat)HEIGHT,
                                 0.1f, 100.0f);
 
@@ -335,14 +356,19 @@ GLuint loadTexture(const char *filepath) {
 }
 
 void update_direction(float angle) {
-  if (snake_coords[coord_index] >= 0) {
-    snake_coords[coord_index] =
-        (ceil(snake_coords[coord_index] / 0.625f)) * 0.625f;
+  for (int i = 1; i < total_snake; i++) {
+    for (int j = 0; j < 2; j++)
+      snakeData[i].snake_coords[j] = snakeData[i - 1].snake_coords[j];
+    snakeData[i].rotate_angle = snakeData[i - 1].rotate_angle;
+  }
+  if (distance >= 0) {
+      snakeData[0].snake_coords[coord_index] =
+          (ceil(snakeData[0].snake_coords[coord_index] / 0.625f)) * 0.625f;
   } else {
-    snake_coords[coord_index] =
-        (floor(snake_coords[coord_index] / 0.625f)) * 0.625f;
+    snakeData[0].snake_coords[coord_index] =
+        (floor(snakeData[0].snake_coords[coord_index] / 0.625f)) * 0.625f;
   }
   coord_index = (coord_index + 1) % 2;
   state = (state + 1) % 2;
-  rotate_angle += angle;
-};
+  snakeData[0].rotate_angle += angle;
+}
