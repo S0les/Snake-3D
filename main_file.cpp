@@ -1,4 +1,5 @@
 #include "Camera.h"
+#include "column.h"
 #include "cube.h"
 #include "fence.h"
 #include "map.h"
@@ -29,6 +30,7 @@ float distance = -0.05f;
 float rotate_angle = 0.f;
 float snake_coords[2] = {0.f, 0.f};
 GLuint map_texture;
+GLuint column_texture;
 GLuint fence_texture;
 GLuint snake_texture;
 const GLuint WIDTH = 1080, HEIGHT = 800;
@@ -55,6 +57,7 @@ void initWindow(GLFWwindow *window);
 void generateMap(void);
 void generateSnake(void);
 void generateFence(int fenceNumber);
+void generateColumn(int columnNumber);
 void do_movement(void);
 void update_direction(float angle);
 
@@ -134,6 +137,7 @@ void initOpenglProgram(GLFWwindow *window) {
   glfwSetKeyCallback(window, key_callback);
   map_texture = loadTexture("images/map-texture.png");
   fence_texture = loadTexture("images/bricks.png");
+  column_texture = loadTexture("images/bricks.png");
   snake_texture = loadTexture("images/snake.jpg");
   for (int i = 0; i < 1024; i++) {
     for (int j = 0; j < 2; j++)
@@ -147,6 +151,7 @@ void initOpenglProgram(GLFWwindow *window) {
 void freeOpenglProgram(GLFWwindow *window) {
   glDeleteTextures(1, &map_texture);
   glDeleteTextures(1, &fence_texture);
+  glDeleteTextures(1, &column_texture);
   glfwDestroyWindow(window);
   return;
 }
@@ -155,11 +160,14 @@ void drawScene(GLFWwindow *window) {
   glEnable(GL_DEPTH_TEST);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   basicShader->use();
+  lookAt();
   generateMap();
-  for (int i = 0; i < 4; i++)
+  for (int i = 0; i < 4; i++) {
     generateFence(i);
-  for (int i = 0; i < total_snake; i++)
-    snakeData[i].snake_coords[coord_index] += distance;
+    for (int i = 0; i < total_snake; i++)
+      snakeData[i].snake_coords[coord_index] += distance;
+    generateColumn(i);
+  }
   generateSnake();
   for (int i = 0; i < 2; i++) {
     if (snakeData[0].snake_coords[i] > 9.49f ||
@@ -247,6 +255,32 @@ void generateFence(int fenceNumber) {
   glDisableVertexAttribArray(basicShader->attrib("texCoord"));
 }
 
+void generateColumn(int columnNumber) {
+  glEnableVertexAttribArray(basicShader->attrib("position"));
+  glVertexAttribPointer(basicShader->attrib("position"), 4, GL_FLOAT, false, 0,
+                        column_vertices);
+
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, column_texture);
+  glUniform1i(basicShader->uniform("textureSampler"), 0);
+
+  glm::mat4 model = glm::mat4(1.0f);
+  model = glm::translate(model, columnPositions[columnNumber]);
+  if (columnNumber > 1)
+    model = glm::rotate(model, 1.57f, glm::vec3(0.0f, 1.0f, 0.0f));
+  model = glm::scale(model, glm::vec3(0.25f, 1.0f, 0.25f));
+  glUniformMatrix4fv(basicShader->uniform("model"), 1, false,
+                     glm::value_ptr(model));
+
+  glEnableVertexAttribArray(basicShader->attrib("texCoord"));
+  glVertexAttribPointer(basicShader->attrib("texCoord"), 2, GL_FLOAT, false, 0,
+                        column_tex_coords);
+
+  glDrawArrays(GL_TRIANGLES, 0, column_vertexcount);
+  glDisableVertexAttribArray(basicShader->attrib("position"));
+  glDisableVertexAttribArray(basicShader->attrib("texCoord"));
+}
+
 void generateSnake(void) {
   for (int i = 0; i < total_snake; i++) {
     glEnableVertexAttribArray(basicShader->attrib("position"));
@@ -288,9 +322,10 @@ void lookAt() {
   view = camera.GetViewMatrix();
   glm::mat4 projection = glm::mat4(1.0f);
   model = glm::rotate(model, 0.0f, glm::vec3(0.5f, 1.0f, 0.0f));
-  view = glm::rotate(view, snakeData[0].rotate_angle, glm::vec3(0.0f, 1.0f, 0.0f));
+  view =
+      glm::rotate(view, snakeData[0].rotate_angle, glm::vec3(0.0f, 1.0f, 0.0f));
   view = glm::translate(view, glm::vec3(-snakeData[0].snake_coords[0], -1.2f,
-                                     -snakeData[0].snake_coords[1]));
+                                        -snakeData[0].snake_coords[1]));
   // view = glm::rotate(view, 1.5708f, glm::vec3(1.0f, 0.0f, 0.0f));
   // view = glm::translate(view, glm::vec3(0.0f, -20.0f, 0.0f));
   projection = glm::perspective(camera.Zoom, (GLfloat)WIDTH / (GLfloat)HEIGHT,
@@ -362,8 +397,8 @@ void update_direction(float angle) {
     snakeData[i].rotate_angle = snakeData[i - 1].rotate_angle;
   }
   if (distance >= 0) {
-      snakeData[0].snake_coords[coord_index] =
-          (ceil(snakeData[0].snake_coords[coord_index] / 0.625f)) * 0.625f;
+    snakeData[0].snake_coords[coord_index] =
+        (ceil(snakeData[0].snake_coords[coord_index] / 0.625f)) * 0.625f;
   } else {
     snakeData[0].snake_coords[coord_index] =
         (floor(snakeData[0].snake_coords[coord_index] / 0.625f)) * 0.625f;
