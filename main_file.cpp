@@ -329,11 +329,10 @@ GLuint loadTexture(const char *filepath) {
 
 void update_direction(float angle) {
   snake_coords[coord_index] =
-      ((int)(snake_coords[coord_index] / 0.62f)) * 0.622f;
+      ((int)(snake_coords[coord_index] / 0.625f)) * 0.625f;
   coord_index = (coord_index + 1) % 2;
   state = (state + 1) % 2;
   rotate_angle += angle; 
   snake_coords[coord_index] =
-      (int)(snake_coords[coord_index] / 0.622f) * 1.f;
-  snake_coords[coord_index] *= 0.622f;
+      ((int)(snake_coords[coord_index] / 0.625f)) * 0.625f;
 };
