@@ -335,7 +335,5 @@ void update_direction(float angle) {
   rotate_angle += angle; 
   snake_coords[coord_index] =
       (int)(snake_coords[coord_index] / 0.622f) * 1.f;
-  printf("%f ", snake_coords[coord_index]);
   snake_coords[coord_index] *= 0.622f;
-  printf("%f %f\n\n",snake_coords[0], snake_coords[1]);
 };
