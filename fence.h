@@ -3,8 +3,8 @@
 #include <glm/glm.hpp>
 
 glm::vec3 fencePositions[] = {
-    glm::vec3(0.0f, 0.0f, -10.1f), glm::vec3(0.0f, 0.0f, 10.1f),
-    glm::vec3(10.1f, 0.0f, 0.0f), glm::vec3(-10.1f, 0.0f, 0.0f)};
+    glm::vec3(-0.311f, 0.0f, -10.411f), glm::vec3(-0.311f, 0.0f, 9.789f),
+    glm::vec3(9.789f, 0.0f, -0.311f), glm::vec3(-10.411f, 0.0f, -0.311f)};
 
 int fence_vertexcount = 36;
 
