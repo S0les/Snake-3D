@@ -6,6 +6,7 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <SOIL/SOIL.h>
+#include <bits/stdc++.h>
 #include <cmath>
 #include <cstdint>
 #include <glm/ext/matrix_transform.hpp>
@@ -14,7 +15,6 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 #include <stdlib.h>
-#include <bits/stdc++.h>
 int aspectRatio = 1;
 int state = 1;
 int coord_index = 1;
@@ -148,9 +148,15 @@ void drawScene(GLFWwindow *window) {
     generateFence(i);
   snake_coords[coord_index] += distance;
   generateSnake();
-  if (abs(snake_coords[coord_index]) >= 10.f) {
-    snake_coords[0] = 0.f;
-    snake_coords[1] = 0.f;
+  for (int i = 0; i < 2; i++) {
+    if (snake_coords[i] > 9.49f || snake_coords[i] < -10.12f) {
+      snake_coords[0] = 0.f;
+      snake_coords[1] = 0.f;
+      coord_index = 1;
+      state = 1;
+      rotate_angle = 0.f;
+      distance = -0.05f;
+    }
   }
   glfwSwapBuffers(window);
   return;
@@ -261,10 +267,10 @@ void lookAt() {
   view = camera.GetViewMatrix();
   glm::mat4 projection = glm::mat4(1.0f);
   model = glm::rotate(model, 0.0f, glm::vec3(0.5f, 1.0f, 0.0f));
-  // view = glm::rotate(view, 1.5708f, glm::vec3(1.0f, 0.0f, 0.0f));
   view = glm::rotate(view, rotate_angle, glm::vec3(0.0f, 1.0f, 0.0f));
-  view =
-      glm::translate(view, glm::vec3(-snake_coords[0], -1.f, -snake_coords[1]));
+  view = glm::translate(view,
+                        glm::vec3(-snake_coords[0], -1.2f, -snake_coords[1]));
+  // view = glm::rotate(view, 1.5708f, glm::vec3(1.0f, 0.0f, 0.0f));
   // view = glm::translate(view, glm::vec3(0.0f, -20.0f, 0.0f));
   projection = glm::perspective(camera.Zoom, (GLfloat)WIDTH / (GLfloat)HEIGHT,
                                 0.1f, 100.0f);
@@ -329,11 +335,14 @@ GLuint loadTexture(const char *filepath) {
 }
 
 void update_direction(float angle) {
-  snake_coords[coord_index] =
-      ((int)(snake_coords[coord_index] / 0.625f)) * 0.625f;
+  if (snake_coords[coord_index] >= 0) {
+    snake_coords[coord_index] =
+        (ceil(snake_coords[coord_index] / 0.625f)) * 0.625f;
+  } else {
+    snake_coords[coord_index] =
+        (floor(snake_coords[coord_index] / 0.625f)) * 0.625f;
+  }
   coord_index = (coord_index + 1) % 2;
   state = (state + 1) % 2;
-  rotate_angle += angle; 
-  snake_coords[coord_index] =
-      ((int)(snake_coords[coord_index] / 0.625f)) * 0.625f;
+  rotate_angle += angle;
 };
