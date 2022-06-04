@@ -102,13 +102,13 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action,
 
   if ((key == GLFW_KEY_D) && action == GLFW_PRESS) {
     update_direction(1.5708f);
-    if (state == 1)
+    if (state == 0)
       distance *= -1.0f;
   }
 
   if ((key == GLFW_KEY_A) && action == GLFW_PRESS) {
     update_direction(-1.5708f);
-    if (state == 0)
+    if (state == 1)
       distance *= -1.0f;
   }
 
@@ -288,11 +288,11 @@ void lookAt() {
   view = camera.GetViewMatrix();
   glm::mat4 projection = glm::mat4(1.0f);
   model = glm::rotate(model, 0.0f, glm::vec3(0.5f, 1.0f, 0.0f));
-  // view = glm::rotate(view, rotate_angle, glm::vec3(0.0f, 1.0f, 0.0f));
-  // view = glm::translate(view, glm::vec3(-snakeData[0].snake_coords[0], -1.2f,
-  //                                     -snakeData[0].snake_coords[1]));
-  view = glm::rotate(view, 1.5708f, glm::vec3(1.0f, 0.0f, 0.0f));
-  view = glm::translate(view, glm::vec3(0.0f, -20.0f, 0.0f));
+  view = glm::rotate(view, snakeData[0].rotate_angle, glm::vec3(0.0f, 1.0f, 0.0f));
+  view = glm::translate(view, glm::vec3(-snakeData[0].snake_coords[0], -1.2f,
+                                     -snakeData[0].snake_coords[1]));
+  // view = glm::rotate(view, 1.5708f, glm::vec3(1.0f, 0.0f, 0.0f));
+  // view = glm::translate(view, glm::vec3(0.0f, -20.0f, 0.0f));
   projection = glm::perspective(camera.Zoom, (GLfloat)WIDTH / (GLfloat)HEIGHT,
                                 0.1f, 100.0f);
 
