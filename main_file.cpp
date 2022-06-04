@@ -1,6 +1,7 @@
 #include "Camera.h"
 #include "cube.h"
 #include "fence.h"
+#include "column.h"
 #include "map.h"
 #include "shaderprogram.h"
 #include <GL/glew.h>
@@ -22,6 +23,7 @@ float distance = -0.05f;
 float rotate_angle = 0.f;
 float snake_coords[2] = {0.f, 0.f};
 GLuint map_texture;
+GLuint column_texture;
 GLuint fence_texture;
 GLuint snake_texture;
 
@@ -49,6 +51,7 @@ void initWindow(GLFWwindow *window);
 void generateMap(void);
 void generateSnake(void);
 void generateFence(int fenceNumber);
+void generateColumn(int columnNumber);
 void do_movement(void);
 void update_direction(float angle);
 
@@ -127,6 +130,7 @@ void initOpenglProgram(GLFWwindow *window) {
   glfwSetKeyCallback(window, key_callback);
   map_texture = loadTexture("images/map-texture.png");
   fence_texture = loadTexture("images/bricks.png");
+  column_texture = loadTexture("images/bricks.png"); 
   snake_texture = loadTexture("images/snake.jpg");
   return;
 }
@@ -134,6 +138,7 @@ void initOpenglProgram(GLFWwindow *window) {
 void freeOpenglProgram(GLFWwindow *window) {
   glDeleteTextures(1, &map_texture);
   glDeleteTextures(1, &fence_texture);
+  glDeleteTextures(1, &column_texture);
   glfwDestroyWindow(window);
   return;
 }
@@ -142,9 +147,13 @@ void drawScene(GLFWwindow *window) {
   glEnable(GL_DEPTH_TEST);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   basicShader->use();
+  lookAt();
   generateMap();
   for (int i = 0; i < 4; i++)
+  {
     generateFence(i);
+    generateColumn(i);
+  }
   snake_coords[coord_index] += distance;
   generateSnake();
   if (abs(snake_coords[coord_index]) >= 10.1f) {
@@ -223,6 +232,32 @@ void generateFence(int fenceNumber) {
   glDisableVertexAttribArray(basicShader->attrib("texCoord"));
 }
 
+void generateColumn(int columnNumber) {
+  glEnableVertexAttribArray(basicShader->attrib("position"));
+  glVertexAttribPointer(basicShader->attrib("position"), 4, GL_FLOAT, false, 0,
+                        column_vertices);
+
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, column_texture);
+  glUniform1i(basicShader->uniform("textureSampler"), 0);
+
+  glm::mat4 model = glm::mat4(1.0f);
+  model = glm::translate(model, columnPositions[columnNumber]);
+  if (columnNumber > 1)
+    model = glm::rotate(model, 1.57f, glm::vec3(0.0f, 1.0f, 0.0f));
+  model = glm::scale(model, glm::vec3(0.25f, 1.0f, 0.25f));
+  glUniformMatrix4fv(basicShader->uniform("model"), 1, false,
+                     glm::value_ptr(model));
+
+  glEnableVertexAttribArray(basicShader->attrib("texCoord"));
+  glVertexAttribPointer(basicShader->attrib("texCoord"), 2, GL_FLOAT, false, 0,
+                        column_tex_coords);
+
+  glDrawArrays(GL_TRIANGLES, 0, column_vertexcount);
+  glDisableVertexAttribArray(basicShader->attrib("position"));
+  glDisableVertexAttribArray(basicShader->attrib("texCoord"));
+}
+
 void generateSnake(void) {
   glEnableVertexAttribArray(basicShader->attrib("position"));
   glVertexAttribPointer(basicShader->attrib("position"), 4, GL_FLOAT, false, 0,
@@ -260,11 +295,11 @@ void lookAt() {
   view = camera.GetViewMatrix();
   glm::mat4 projection = glm::mat4(1.0f);
   model = glm::rotate(model, 0.0f, glm::vec3(0.5f, 1.0f, 0.0f));
-  // view = glm::rotate(view, 1.5708f, glm::vec3(1.0f, 0.0f, 0.0f));
-  view = glm::rotate(view, rotate_angle, glm::vec3(0.0f, 1.0f, 0.0f));
-  view =
+   view = glm::rotate(view, 1.5708f, glm::vec3(1.0f, 0.0f, 0.0f));
+ // view = glm::rotate(view, rotate_angle, glm::vec3(0.0f, 1.0f, 0.0f));
+ // view =
       glm::translate(view, glm::vec3(-snake_coords[0], -1.f, -snake_coords[1]));
-  // view = glm::translate(view, glm::vec3(0.0f, -20.0f, 0.0f));
+  view = glm::translate(view, glm::vec3(0.0f, -20.0f, 0.0f));
   projection = glm::perspective(camera.Zoom, (GLfloat)WIDTH / (GLfloat)HEIGHT,
                                 0.1f, 100.0f);
 
