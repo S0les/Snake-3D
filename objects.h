@@ -29,6 +29,7 @@ extern int state;
 
 GLuint loadTexture(const char *filepath);
 void initObjects(void);
+void generateObjects(int total_snake);
 void generateMap(ShaderProgram *basicShader);
 void generateSnake(ShaderProgram *basicShader, int total_snake);
 void generateFence(ShaderProgram *basicShader, int fenceNumber);

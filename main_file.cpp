@@ -129,13 +129,7 @@ void drawScene(GLFWwindow *window) {
   glEnable(GL_DEPTH_TEST);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   basicShader->use();
-  generateMap(basicShader);
-  for (int i = 0; i < 4; i++) {
-    generateFence(basicShader, i);
-    generateColumn(basicShader, i);
-  }
   snakeData[0].snake_coords[snakeData[0].index] += distance;
-  generateSnake(basicShader, total_snake);
   for (int i = 0; i < 2; i++) {
     if (snakeData[0].snake_coords[i] > 9.49f ||
         snakeData[0].snake_coords[i] < -10.12f) {
@@ -150,6 +144,7 @@ void drawScene(GLFWwindow *window) {
       total_snake = 1;
     }
   }
+  generateObjects(total_snake);
   glfwSwapBuffers(window);
   return;
 }

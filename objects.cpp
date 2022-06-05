@@ -1,4 +1,5 @@
 #include "objects.h"
+#include "shaderprogram.h"
 
 GLuint map_texture;
 GLuint column_texture;
@@ -20,6 +21,7 @@ void initObjects(void) {
     snakeData[i].texture = snake_texture;
   }
 }
+
 GLuint loadTexture(const char *filepath) {
   GLuint texture;
   int img_width, img_height;
@@ -38,6 +40,15 @@ GLuint loadTexture(const char *filepath) {
   glBindTexture(GL_TEXTURE_2D, 0);
   SOIL_free_image_data(image);
   return texture;
+}
+
+void generateObjects(int total_snake) {
+  generateSnake(basicShader, total_snake);
+  generateMap(basicShader);
+  for (int i = 0; i < 4; i++) {
+    generateFence(basicShader, i);
+    generateColumn(basicShader, i);
+  }
 }
 
 void generateMap(ShaderProgram *basicShader) {
@@ -152,7 +163,8 @@ void update_direction(float angle, int total_snake, float distance) {
         (ceil(snakeData[0].snake_coords[snakeData[0].index] / 0.625f)) * 0.625f;
   } else {
     snakeData[0].snake_coords[snakeData[0].index] =
-        (floor(snakeData[0].snake_coords[snakeData[0].index] / 0.625f)) * 0.625f;
+        (floor(snakeData[0].snake_coords[snakeData[0].index] / 0.625f)) *
+        0.625f;
   }
   snakeData[0].index_old = snakeData[0].index;
   snakeData[0].index = (snakeData[0].index + 1) % 2;
