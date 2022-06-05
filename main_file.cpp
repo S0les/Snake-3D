@@ -134,8 +134,7 @@ void drawScene(GLFWwindow *window) {
     generateFence(basicShader, i);
     generateColumn(basicShader, i);
   }
-  for (int i = 0; i < total_snake; i++)
-    snakeData[i].snake_coords[coord_index] += distance;
+  snakeData[0].snake_coords[snakeData[0].index] += distance;
   generateSnake(basicShader, total_snake);
   for (int i = 0; i < 2; i++) {
     if (snakeData[0].snake_coords[i] > 9.49f ||
@@ -144,7 +143,7 @@ void drawScene(GLFWwindow *window) {
         snakeData[j].snake_coords[0] = 0.f;
         snakeData[j].snake_coords[1] = 0.f + 0.625 * j;
       }
-      coord_index = 1;
+      snakeData[0].index = 1;
       state = 1;
       snakeData[0].rotate_angle = 0.f;
       distance = -0.05f;

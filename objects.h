@@ -16,6 +16,8 @@ struct SnakeInfo {
   float rotate_angle;
   float snake_coords[2];
   GLuint texture;
+  int index;
+  int index_old;
 };
 
 extern GLuint map_texture;
@@ -24,7 +26,6 @@ extern GLuint fence_texture;
 extern GLuint snake_texture;
 extern SnakeInfo snakeData[];
 extern int state;
-extern int coord_index;
 
 GLuint loadTexture(const char *filepath);
 void initObjects(void);

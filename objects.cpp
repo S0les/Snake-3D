@@ -6,7 +6,6 @@ GLuint fence_texture;
 GLuint snake_texture;
 SnakeInfo snakeData[1024];
 int state = 1;
-int coord_index = 1;
 
 void initObjects(void) {
   map_texture = loadTexture("images/map-texture.png");
@@ -16,9 +15,10 @@ void initObjects(void) {
   for (int i = 0; i < 1024; i++) {
     for (int j = 0; j < 2; j++)
       snakeData[i].snake_coords[j] = 0.f;
+    snakeData[i].index = 1;
+    snakeData[i].index_old = 1;
     snakeData[i].texture = snake_texture;
   }
-  snakeData[1].snake_coords[1] = -0.622;
 }
 GLuint loadTexture(const char *filepath) {
   GLuint texture;
@@ -147,19 +147,15 @@ void generateSnake(ShaderProgram *basicShader, int total_snake) {
 }
 
 void update_direction(float angle, int total_snake, float distance) {
-  for (int i = 1; i < total_snake; i++) {
-    for (int j = 0; j < 2; j++)
-      snakeData[i].snake_coords[j] = snakeData[i - 1].snake_coords[j];
-    snakeData[i].rotate_angle = snakeData[i - 1].rotate_angle;
-  }
   if (distance >= 0) {
-    snakeData[0].snake_coords[coord_index] =
-        (ceil(snakeData[0].snake_coords[coord_index] / 0.625f)) * 0.625f;
+    snakeData[0].snake_coords[snakeData[0].index] =
+        (ceil(snakeData[0].snake_coords[snakeData[0].index] / 0.625f)) * 0.625f;
   } else {
-    snakeData[0].snake_coords[coord_index] =
-        (floor(snakeData[0].snake_coords[coord_index] / 0.625f)) * 0.625f;
+    snakeData[0].snake_coords[snakeData[0].index] =
+        (floor(snakeData[0].snake_coords[snakeData[0].index] / 0.625f)) * 0.625f;
   }
-  coord_index = (coord_index + 1) % 2;
+  snakeData[0].index_old = snakeData[0].index;
+  snakeData[0].index = (snakeData[0].index + 1) % 2;
   state = (state + 1) % 2;
   snakeData[0].rotate_angle += angle;
 }
