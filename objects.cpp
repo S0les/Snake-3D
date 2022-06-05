@@ -5,8 +5,10 @@ GLuint column_texture;
 GLuint fence_texture;
 GLuint snake_texture;
 SnakeInfo snakeData[1024];
+int state = 1;
+int coord_index = 1;
 
-void initObjects(void){
+void initObjects(void) {
   map_texture = loadTexture("images/map-texture.png");
   fence_texture = loadTexture("images/bricks.png");
   column_texture = loadTexture("images/bricks.png");
@@ -80,7 +82,8 @@ void generateFence(ShaderProgram *basicShader, int fenceNumber) {
                      glm::value_ptr(model));
 
   glEnableVertexAttribArray(basicShader->attrib("texCoord"));
-  glVertexAttribPointer(basicShader->attrib("texCoord"), 2, GL_FLOAT, false, 0, fence_tex_coords);
+  glVertexAttribPointer(basicShader->attrib("texCoord"), 2, GL_FLOAT, false, 0,
+                        fence_tex_coords);
 
   glDrawArrays(GL_TRIANGLES, 0, fence_vertexcount);
   glDisableVertexAttribArray(basicShader->attrib("position"));
@@ -141,4 +144,22 @@ void generateSnake(ShaderProgram *basicShader, int total_snake) {
     glDisableVertexAttribArray(basicShader->attrib("position"));
     glDisableVertexAttribArray(basicShader->attrib("texCoord"));
   }
+}
+
+void update_direction(float angle, int total_snake, float distance) {
+  for (int i = 1; i < total_snake; i++) {
+    for (int j = 0; j < 2; j++)
+      snakeData[i].snake_coords[j] = snakeData[i - 1].snake_coords[j];
+    snakeData[i].rotate_angle = snakeData[i - 1].rotate_angle;
+  }
+  if (distance >= 0) {
+    snakeData[0].snake_coords[coord_index] =
+        (ceil(snakeData[0].snake_coords[coord_index] / 0.625f)) * 0.625f;
+  } else {
+    snakeData[0].snake_coords[coord_index] =
+        (floor(snakeData[0].snake_coords[coord_index] / 0.625f)) * 0.625f;
+  }
+  coord_index = (coord_index + 1) % 2;
+  state = (state + 1) % 2;
+  snakeData[0].rotate_angle += angle;
 }

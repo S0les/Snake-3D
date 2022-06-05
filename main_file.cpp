@@ -15,8 +15,6 @@
 #include <stdlib.h>
 int total_snake = 1;
 int aspectRatio = 1;
-int state = 1;
-int coord_index = 1;
 float distance = -0.05f;
 float rotate_angle = 0.f;
 float snake_coords[2] = {0.f, 0.f};
@@ -42,7 +40,6 @@ void freeOpenglProgram(GLFWwindow *window);
 void drawScene(GLFWwindow *window);
 void initWindow(GLFWwindow *window);
 void do_movement(void);
-void update_direction(float angle);
 
 int main(int argc, char *argv[]) {
   GLFWwindow *window;
@@ -85,13 +82,13 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action,
     glfwSetWindowShouldClose(window, GL_TRUE);
 
   if ((key == GLFW_KEY_D) && action == GLFW_PRESS) {
-    update_direction(1.5708f);
+    update_direction(1.5708f, total_snake, distance);
     if (state == 0)
       distance *= -1.0f;
   }
 
   if ((key == GLFW_KEY_A) && action == GLFW_PRESS) {
-    update_direction(-1.5708f);
+    update_direction(-1.5708f, total_snake, distance);
     if (state == 1)
       distance *= -1.0f;
   }
@@ -233,22 +230,4 @@ void do_movement() {
     camera.ProcessKeyboard(LEFT, deltaTime);
   if (keys[GLFW_KEY_D])
     camera.ProcessKeyboard(RIGHT, deltaTime);
-}
-
-void update_direction(float angle) {
-  for (int i = 1; i < total_snake; i++) {
-    for (int j = 0; j < 2; j++)
-      snakeData[i].snake_coords[j] = snakeData[i - 1].snake_coords[j];
-    snakeData[i].rotate_angle = snakeData[i - 1].rotate_angle;
-  }
-  if (distance >= 0) {
-    snakeData[0].snake_coords[coord_index] =
-        (ceil(snakeData[0].snake_coords[coord_index] / 0.625f)) * 0.625f;
-  } else {
-    snakeData[0].snake_coords[coord_index] =
-        (floor(snakeData[0].snake_coords[coord_index] / 0.625f)) * 0.625f;
-  }
-  coord_index = (coord_index + 1) % 2;
-  state = (state + 1) % 2;
-  snakeData[0].rotate_angle += angle;
 }

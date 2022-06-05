@@ -23,6 +23,8 @@ extern GLuint column_texture;
 extern GLuint fence_texture;
 extern GLuint snake_texture;
 extern SnakeInfo snakeData[];
+extern int state;
+extern int coord_index;
 
 GLuint loadTexture(const char *filepath);
 void initObjects(void);
@@ -30,4 +32,5 @@ void generateMap(ShaderProgram *basicShader);
 void generateSnake(ShaderProgram *basicShader, int total_snake);
 void generateFence(ShaderProgram *basicShader, int fenceNumber);
 void generateColumn(ShaderProgram *basicShader, int columnNumber);
+void update_direction(float angle, int total_snake, float distance);
 #endif
