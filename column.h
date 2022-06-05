@@ -3,9 +3,9 @@
 #include <glm/glm.hpp>
  
 glm::vec3 columnPositions[] = {
-    glm::vec3(-10.511f, 0.0f, -10.611f), glm::vec3(9.989f, 0.0f, 9.889f),
-    glm::vec3(9.989f, 0.0f, -10.611f), glm::vec3(-10.611f, 0.0f, 9.989f)};
-
+    glm::vec3(-10.56f, 0.5f, -10.551f), glm::vec3(9.939f, 0.5f, 9.939f),
+    glm::vec3(9.939f, 0.5f, -10.585f), glm::vec3(-10.551f, 0.5f, 9.939f)};
+    
 int column_vertexcount = 36;
 
 float column_vertices[] = {
@@ -48,83 +48,64 @@ float column_vertices[] = {
 };
 float column_tex_coords[] = {
     // Wall on back front
-    5.0f,
-    1.0f,
-    0.0f,
-    0.0f,
-    0.0f,
-    1.0f,
-    20.0f,
-    1.0f,
-    20.0f,
-    0.0f,
-    0.0f,
-    0.0f,
+    0.5f,2.0f,
+    0.0f,0.0f,
+    0.0f,2.0f,
+    0.5f,2.0f,
+    0.5f,0.0f,
+    0.0f,0.0f,
+
     // Wall on front
-    5.0f,
-    1.0f,
-    0.0f,
-    0.0f,
-    0.0f,
-    1.0f,
-    20.0f,
-    1.0f,
-    5.0f,
-    0.0f,
-    0.0f,
-    0.0f,
+    0.5f,2.0f,
+    0.0f,0.0f,
+    0.0f,2.0f,
+    0.5f,2.0f,
+    0.5f,0.0f,
+    0.0f,0.0f,
+
     // Wall on bottom
-    5.0f,
-    0.1f,
+    0.5f,
+    0.5f,
     0.0f,
     0.0f,
     0.0f,
-    0.1f,
-    5.0f,
-    0.1f,
-    20.0f,
+    0.5f,
+    0.5f,
+    0.5f,
+    0.5f,
     0.0f,
     0.0f,
     0.0f,
+
     // Wall on top
-    5.0f,
-    0.1f,
+    0.5f,
+    0.5f,
     0.0f,
     0.0f,
     0.0f,
-    0.1f,
-    20.0f,
-    0.1f,
-    5.0f,
+    0.5f,
+    0.5f,
+    0.5f,
+    0.5f,
     0.0f,
     0.0f,
     0.0f,
+
     // Wall on left
-    0.1f,
-    1.0f,
-    0.0f,
-    0.0f,
-    0.0f,
-    1.0f,
-    0.1f,
-    1.0f,
-    0.1f,
-    0.0f,
-    0.0f,
-    0.0f,
+    0.5f,2.0f,
+    0.0f,0.0f,
+    0.0f,2.0f,
+    0.5f,2.0f,
+    0.5f,0.0f,
+    0.0f,0.0f,
+
     // Wall on right
-    0.1f,
-    1.0f,
-    0.0f,
-    0.0f,
-    0.0f,
-    1.0f,
-    0.1f,
-    1.0f,
-    0.1f,
-    0.0f,
-    0.0f,
-    0.0f,
+    0.5f,2.0f,
+    0.0f,0.0f,
+    0.0f,2.0f,
+    0.5f,2.0f,
+    0.5f,0.0f,
+    0.0f,0.0f,
 };
 #endif
 
