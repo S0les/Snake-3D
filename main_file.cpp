@@ -13,6 +13,13 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 #include <stdlib.h>
+#include <lodepng.h>
+//----------------------------
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+//---------------------------
+
 int total_snake = 1;
 int aspectRatio = 1;
 int state = 1;
@@ -32,6 +39,16 @@ bool firstMouse = true;
 GLfloat deltaTime = 0.0f;
 GLfloat lastFrame = 0.0f;
 
+
+GLuint tex;
+//-----------Assimp----------------
+std::vector<glm::vec4> verts;
+std::vector<glm::vec4> norms;
+std::vector<glm::vec2> texCoords;
+std::vector<unsigned int> indices;
+//----------------------------
+
+
 void lookAt();
 void key_callback(GLFWwindow *window, int key, int scancode, int action,
                   int mode);
@@ -43,6 +60,9 @@ void drawScene(GLFWwindow *window);
 void initWindow(GLFWwindow *window);
 void do_movement(void);
 void update_direction(float angle);
+GLuint readTexture(const char* filename) ;
+void loadModel(std::string plik);
+void Ring(glm::mat4 P, glm::mat4 V, glm::mat4 M);
 
 int main(int argc, char *argv[]) {
   GLFWwindow *window;
@@ -117,6 +137,9 @@ void initOpenglProgram(GLFWwindow *window) {
   glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
   glfwSetKeyCallback(window, key_callback);
   initObjects();
+  tex = readTexture("images/Gold_Band_Textures_2K/gold band ring_BaseColor.png");
+  loadModel(std::string("Gold_Band_Ring_FBX.fbx"));
+
   return;
 }
 
@@ -127,6 +150,73 @@ void freeOpenglProgram(GLFWwindow *window) {
   glfwDestroyWindow(window);
   return;
 }
+
+ void loadModel(std::string plik){
+ 
+         using namespace std;
+ 
+         Assimp::Importer importer;
+         const aiScene* scene = importer.ReadFile(plik,aiProcess_Triangulate | aiProcess_FlipUVs |aiProcess_GenSmoothNormals);
+         cout << importer.GetErrorString() << endl;
+         aiMesh* mesh = scene->mMeshes[0];
+ 
+         for(int i = 0; i < mesh ->mNumVertices; i++)
+         {
+             aiVector3D vertex = mesh->mVertices[i];
+             verts.push_back(glm::vec4(vertex.x,vertex.y,vertex.z,  1));
+ 
+             aiVector3D normal = mesh->mNormals[i];
+             norms.push_back(glm::vec4(normal.x,normal.y,normal.z,  0));
+ 
+             aiVector3D texCoord = mesh->mTextureCoords[0][i];
+             texCoords.push_back(glm::vec2(texCoord.x,texCoord.y));
+         }
+         for (int i = 0 ; i < mesh->mNumFaces; i++){
+             aiFace& face = mesh->mFaces[i];
+ 
+             for(int j = 0; j < face.mNumIndices; j++ )
+             {
+                 indices.push_back(face.mIndices[j]);
+             }
+         }
+ 
+         aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+ 
+         for(int i = 0; i < material->GetTextureCount(aiTextureType_DIFFUSE);i++)
+         {
+             aiString str;
+             material -> GetTexture(aiTextureType_DIFFUSE,i,&str);
+         }
+     }
+
+void Ring(glm::mat4 P, glm::mat4 V, glm::mat4 M) {
+     spLambertTextured->use(); //Aktywuj program cieniujący
+
+     glUniformMatrix4fv(spLambertTextured->uniform("P"), 1, false, glm::value_ptr(P)); //Załaduj do programu cieniującego macierz rzutowania
+     glUniformMatrix4fv(spLambertTextured->uniform("V"), 1, false, glm::value_ptr(V)); //Załaduj do programu cieniującego macierz widoku
+     glUniformMatrix4fv(spLambertTextured->uniform("M"), 1, false, glm::value_ptr(M)); //Załaduj do programu cieniującego macierz modelu
+
+
+     glEnableVertexAttribArray(spLambertTextured->attrib("vertex"));
+     glVertexAttribPointer(spLambertTextured->attrib("vertex"), 4, GL_FLOAT, false, 0, verts.data()); //Współrzędne wierzchołków bierz z tablicy birdVertices
+
+     glEnableVertexAttribArray(spLambertTextured->attrib("texCoord"));
+     glVertexAttribPointer(spLambertTextured->attrib("texCoord"), 2, GL_FLOAT, false, 0, texCoords.data()); //Współrzędne wierzchołków bierz z tablicy birdColors
+
+      glEnableVertexAttribArray(spLambertTextured->attrib("normal"));
+      glVertexAttribPointer(spLambertTextured->attrib("normal"), 4, GL_FLOAT, false, 0, norms.data()); //Współrzędne wierzchołków bierz  z tablicy birdColors
+
+     glActiveTexture(GL_TEXTURE0);
+     glBindTexture(GL_TEXTURE_2D, tex);
+     glUniform1i(spLambertTextured->uniform("tex"),0);
+
+     glDrawElements(GL_TRIANGLES,indices.size(), GL_UNSIGNED_INT, indices.data());
+
+     glDisableVertexAttribArray(spLambertTextured->attrib("vertex"));
+     glDisableVertexAttribArray(spLambertTextured->attrib("color"));
+     glDisableVertexAttribArray(spLambertTextured->attrib("normal"));
+ }
+
 
 void drawScene(GLFWwindow *window) {
   glEnable(GL_DEPTH_TEST);
@@ -154,6 +244,13 @@ void drawScene(GLFWwindow *window) {
       total_snake = 1;
     }
   }
+     glm::mat4 M = glm::mat4(1.0f); //Zainicjuj macierz modelu macierzą jednostkową
+     glm::mat4 V = glm::lookAt(glm::vec3(0.0f, 0.0f, -5.0f), glm::vec3(0.0f,   0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f)); //Wylicz macierz widoku
+     glm::mat4 P = glm::perspective(glm::radians(50.0f), 1.0f, 1.0f, 50.0f); //Wylicz macierz rzutowania
+ 
+     Ring(P, V, M);
+
+
   glfwSwapBuffers(window);
   return;
 }
@@ -252,3 +349,27 @@ void update_direction(float angle) {
   state = (state + 1) % 2;
   snakeData[0].rotate_angle += angle;
 }
+
+ GLuint readTexture(const char* filename) {
+     GLuint tex;
+     glActiveTexture(GL_TEXTURE0);
+ 
+     //Wczytanie do pamięci komputera
+     std::vector<unsigned char> image;   //Alokuj wektor do wczytania obrazka
+     unsigned width, height;   //Zmienne do których wczytamy wymiary obrazka
+     //Wczytaj obrazek
+     unsigned error = lodepng::decode(image, width, height, filename);
+ 
+     //Import do pamięci karty graficznej
+     glGenTextures(1, &tex); //Zainicjuj jeden uchwyt
+     glBindTexture(GL_TEXTURE_2D, tex); //Uaktywnij uchwyt
+     //Wczytaj obrazek do pamięci KG skojarzonej z uchwytem
+     glTexImage2D(GL_TEXTURE_2D, 0, 4, width, height, 0,
+         GL_RGBA, GL_UNSIGNED_BYTE, (unsigned char*)image.data());
+ 
+     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+ 
+     return tex;
+}
+

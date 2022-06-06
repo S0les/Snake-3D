@@ -1,12 +1,16 @@
 #include "shaderprogram.h"
 
 ShaderProgram *basicShader;
+ShaderProgram* spLambertTextured;
+
 
 void initShaders() {
   basicShader = new ShaderProgram("vertex_shader.glsl", "fragment_shader.glsl");
+  spLambertTextured = new ShaderProgram("v_lamberttextured.glsl","f_lamberttextured.glsl");
 }
 
-void freeShaders() { delete basicShader; }
+void freeShaders() { delete basicShader;
+                     delete spLambertTextured;}
 
 char *ShaderProgram::readFile(const char *fileName) {
   char *result;
