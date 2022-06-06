@@ -12,6 +12,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
+#include <math.h>
 #include <stdlib.h>
 int aspectRatio = 1;
 const GLuint WIDTH = 1080, HEIGHT = 800;
@@ -34,7 +35,7 @@ void initOpenglProgram(GLFWwindow *window);
 void freeOpenglProgram(GLFWwindow *window);
 void drawScene(GLFWwindow *window);
 void initWindow(GLFWwindow *window);
-void do_movement(void);
+void do_movement(GLFWwindow *window);
 
 int main(int argc, char *argv[]) {
   GLFWwindow *window;
@@ -62,7 +63,7 @@ int main(int argc, char *argv[]) {
     drawScene(window);
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwPollEvents();
-    do_movement();
+    do_movement(window);
   }
 
   freeShaders();
@@ -73,23 +74,12 @@ int main(int argc, char *argv[]) {
 
 void key_callback(GLFWwindow *window, int key, int scancode, int action,
                   int mode) {
-  if (key == GLFW_KEY_ESCAPE && action != GLFW_RELEASE)
-    glfwSetWindowShouldClose(window, GL_TRUE);
-
-  if ((key == GLFW_KEY_D) && action != GLFW_RELEASE) {
-    snake_rotate_angle += 0.0523599;
+  if (key >= 0 && key < 1024) {
+    if (action == GLFW_PRESS)
+      keys[key] = true;
+    else if (action == GLFW_RELEASE)
+      keys[key] = false;
   }
-
-  if ((key == GLFW_KEY_A) && action != GLFW_RELEASE) {
-    snake_rotate_angle -= 0.0523599;
-  }
-
-  //  if (key >= 0 && key < 1024) {
-  //    if (action == GLFW_PRESS)
-  //      keys[key] = true;
-  //    else if (action == GLFW_RELEASE)
-  //      keys[key] = false;
-  // }
 }
 
 void windowResizeCallback(GLFWwindow *window, int width, int height) {
@@ -121,6 +111,7 @@ void drawScene(GLFWwindow *window) {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   basicShader->use();
   generateObjects();
+  update_snake_coords();
   glfwSwapBuffers(window);
   return;
 }
@@ -153,10 +144,10 @@ void lookAt() {
   glm::mat4 view = glm::mat4(1.0f);
   view = camera.GetViewMatrix();
   glm::mat4 projection = glm::mat4(1.0f);
-  model = glm::rotate(model, 0.0f, glm::vec3(0.5f, 1.0f, 0.0f));
   view = glm::rotate(view, 0.5f, glm::vec3(1.0f, 0.0f, 0.0f));
   view = glm::rotate(view, snake_rotate_angle, glm::vec3(0.0f, 1.0f, 0.0f));
-  view = glm::translate(view, glm::vec3(0.f, -1.5f, 0.f));
+  view =
+      glm::translate(view, glm::vec3(snake_coords[0], -1.5f, snake_coords[1]));
   // view = glm::rotate(view, 1.5708f, glm::vec3(1.0f, 0.0f, 0.0f));
   // view = glm::translate(view, glm::vec3(0.0f, -20.0f, 0.0f));
   projection = glm::perspective(camera.Zoom, (GLfloat)WIDTH / (GLfloat)HEIGHT,
@@ -190,13 +181,25 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos) {
   camera.ProcessMouseMovement(xoffset, yoffset);
 }
 
-void do_movement() {
-  if (keys[GLFW_KEY_W])
-    camera.ProcessKeyboard(FORWARD, deltaTime);
-  if (keys[GLFW_KEY_S])
-    camera.ProcessKeyboard(BACKWARD, deltaTime);
-  if (keys[GLFW_KEY_A])
-    camera.ProcessKeyboard(LEFT, deltaTime);
-  if (keys[GLFW_KEY_D])
-    camera.ProcessKeyboard(RIGHT, deltaTime);
+void do_movement(GLFWwindow *window) {
+  //  if (keys[GLFW_KEY_W])
+  //    camera.ProcessKeyboard(FORWARD, deltaTime);
+  //  if (keys[GLFW_KEY_S])
+  //    camera.ProcessKeyboard(BACKWARD, deltaTime);
+  //  if (keys[GLFW_KEY_A])
+  //    camera.ProcessKeyboard(LEFT, deltaTime);
+  //  if (keys[GLFW_KEY_D])
+  //    camera.ProcessKeyboard(RIGHT, deltaTime);
+  if (keys[GLFW_KEY_ESCAPE])
+    glfwSetWindowShouldClose(window, GL_TRUE);
+
+  if (keys[GLFW_KEY_D]) {
+    snake_rotate_angle += 0.0523599;
+    snake_rotate_angle = remainder(snake_rotate_angle, 6.28319f);
+  }
+
+  if (keys[GLFW_KEY_A]) {
+    snake_rotate_angle -= 0.0523599;
+    snake_rotate_angle = remainder(snake_rotate_angle, 6.28319f);
+  }
 }

@@ -1,5 +1,7 @@
 #include "objects.h"
 #include "shaderprogram.h"
+#include <cstdio>
+#include <math.h>
 
 GLuint map_texture;
 GLuint column_texture;
@@ -7,6 +9,8 @@ GLuint fence_texture;
 GLuint snake_texture;
 
 float snake_rotate_angle = 0.f;
+float snake_coords[2] = {0.0f, 0.0f};
+float snake_speed = 0.1f;
 
 void initObjects(void) {
   map_texture = loadTexture("images/map-texture.png");
@@ -130,7 +134,8 @@ void generateSnake(ShaderProgram *basicShader) {
   glUniform1i(basicShader->uniform("textureSampler"), 0);
 
   glm::mat4 model = glm::mat4(1.0f);
-  model = glm::translate(model, glm::vec3(0.f, 0.311f, 0.f));
+  model = glm::translate(model,
+                         glm::vec3(-snake_coords[0], 0.311f, -snake_coords[1]));
   model = glm::scale(model, glm::vec3(0.311f, 0.311f, 0.311f));
   model = glm::rotate(model, -snake_rotate_angle, glm::vec3(0.f, 1.f, 0.f));
   glUniformMatrix4fv(basicShader->uniform("model"), 1, false,
@@ -144,3 +149,10 @@ void generateSnake(ShaderProgram *basicShader) {
   glDisableVertexAttribArray(basicShader->attrib("position"));
   glDisableVertexAttribArray(basicShader->attrib("texCoord"));
 }
+
+void update_snake_coords() {
+  snake_coords[0] =
+      snake_coords[0] + snake_speed * cos(snake_rotate_angle + 1.5708f);
+  snake_coords[1] =
+      snake_coords[1] + snake_speed * sin(snake_rotate_angle + 1.5708f);
+};

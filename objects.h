@@ -18,9 +18,11 @@ extern GLuint fence_texture;
 extern GLuint snake_texture;
 extern float snake_rotate_angle;
 extern float snake_speed;
+extern float snake_coords[2];
 
 GLuint loadTexture(const char *filepath);
 void initObjects(void);
+void update_snake_coords(void);
 void generateObjects(void);
 void generateMap(ShaderProgram *basicShader);
 void generateSnake(ShaderProgram *basicShader);
