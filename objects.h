@@ -16,6 +16,8 @@ extern GLuint map_texture;
 extern GLuint column_texture;
 extern GLuint fence_texture;
 extern GLuint snake_texture;
+extern float snake_rotate_angle;
+extern float snake_speed;
 
 GLuint loadTexture(const char *filepath);
 void initObjects(void);

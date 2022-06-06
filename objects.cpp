@@ -6,6 +6,8 @@ GLuint column_texture;
 GLuint fence_texture;
 GLuint snake_texture;
 
+float snake_rotate_angle = 0.f;
+
 void initObjects(void) {
   map_texture = loadTexture("images/map-texture.png");
   fence_texture = loadTexture("images/bricks.png");
@@ -130,7 +132,7 @@ void generateSnake(ShaderProgram *basicShader) {
   glm::mat4 model = glm::mat4(1.0f);
   model = glm::translate(model, glm::vec3(0.f, 0.311f, 0.f));
   model = glm::scale(model, glm::vec3(0.311f, 0.311f, 0.311f));
-  model = glm::rotate(model, 0.f, glm::vec3(0.f, 1.f, 0.f));
+  model = glm::rotate(model, -snake_rotate_angle, glm::vec3(0.f, 1.f, 0.f));
   glUniformMatrix4fv(basicShader->uniform("model"), 1, false,
                      glm::value_ptr(model));
 

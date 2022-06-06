@@ -17,7 +17,6 @@ int aspectRatio = 1;
 const GLuint WIDTH = 1080, HEIGHT = 800;
 bool keys[1024];
 
-// Camera , function LookAt
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
 GLfloat lastX = WIDTH / 2.0;
 GLfloat lastY = HEIGHT / 2.0;
@@ -74,13 +73,15 @@ int main(int argc, char *argv[]) {
 
 void key_callback(GLFWwindow *window, int key, int scancode, int action,
                   int mode) {
-  if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+  if (key == GLFW_KEY_ESCAPE && action != GLFW_RELEASE)
     glfwSetWindowShouldClose(window, GL_TRUE);
 
-  if ((key == GLFW_KEY_D) && action == GLFW_PRESS) {
+  if ((key == GLFW_KEY_D) && action != GLFW_RELEASE) {
+    snake_rotate_angle += 0.0523599;
   }
 
-  if ((key == GLFW_KEY_A) && action == GLFW_PRESS) {
+  if ((key == GLFW_KEY_A) && action != GLFW_RELEASE) {
+    snake_rotate_angle -= 0.0523599;
   }
 
   //  if (key >= 0 && key < 1024) {
@@ -153,8 +154,8 @@ void lookAt() {
   view = camera.GetViewMatrix();
   glm::mat4 projection = glm::mat4(1.0f);
   model = glm::rotate(model, 0.0f, glm::vec3(0.5f, 1.0f, 0.0f));
-  view = glm::rotate(view, 0.f, glm::vec3(0.0f, 1.0f, 0.0f));
   view = glm::rotate(view, 0.5f, glm::vec3(1.0f, 0.0f, 0.0f));
+  view = glm::rotate(view, snake_rotate_angle, glm::vec3(0.0f, 1.0f, 0.0f));
   view = glm::translate(view, glm::vec3(0.f, -1.5f, 0.f));
   // view = glm::rotate(view, 1.5708f, glm::vec3(1.0f, 0.0f, 0.0f));
   // view = glm::translate(view, glm::vec3(0.0f, -20.0f, 0.0f));
