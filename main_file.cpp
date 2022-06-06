@@ -40,7 +40,7 @@ GLfloat deltaTime = 0.0f;
 GLfloat lastFrame = 0.0f;
 
 
-GLuint tex;
+GLuint textureSampler;
 //-----------Assimp----------------
 std::vector<glm::vec4> verts;
 std::vector<glm::vec4> norms;
@@ -59,10 +59,10 @@ void freeOpenglProgram(GLFWwindow *window);
 void drawScene(GLFWwindow *window);
 void initWindow(GLFWwindow *window);
 void do_movement(void);
+void generateRing(ShaderProgram *basicShader);
 void update_direction(float angle);
 GLuint readTexture(const char* filename) ;
 void loadModel(std::string plik);
-void Ring(glm::mat4 P, glm::mat4 V, glm::mat4 M);
 
 int main(int argc, char *argv[]) {
   GLFWwindow *window;
@@ -137,7 +137,7 @@ void initOpenglProgram(GLFWwindow *window) {
   glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
   glfwSetKeyCallback(window, key_callback);
   initObjects();
-  tex = readTexture("images/Gold_Band_Textures_2K/gold band ring_BaseColor.png");
+  textureSampler = readTexture("images/Gold_Band_Textures_2K/gold band ring_BaseColor.png");
   loadModel(std::string("Gold_Band_Ring_FBX.fbx"));
 
   return;
@@ -189,35 +189,6 @@ void freeOpenglProgram(GLFWwindow *window) {
          }
      }
 
-void Ring(glm::mat4 P, glm::mat4 V, glm::mat4 M) {
-     spLambertTextured->use(); //Aktywuj program cieniujący
-
-     glUniformMatrix4fv(spLambertTextured->uniform("P"), 1, false, glm::value_ptr(P)); //Załaduj do programu cieniującego macierz rzutowania
-     glUniformMatrix4fv(spLambertTextured->uniform("V"), 1, false, glm::value_ptr(V)); //Załaduj do programu cieniującego macierz widoku
-     glUniformMatrix4fv(spLambertTextured->uniform("M"), 1, false, glm::value_ptr(M)); //Załaduj do programu cieniującego macierz modelu
-
-
-     glEnableVertexAttribArray(spLambertTextured->attrib("vertex"));
-     glVertexAttribPointer(spLambertTextured->attrib("vertex"), 4, GL_FLOAT, false, 0, verts.data()); //Współrzędne wierzchołków bierz z tablicy birdVertices
-
-     glEnableVertexAttribArray(spLambertTextured->attrib("texCoord"));
-     glVertexAttribPointer(spLambertTextured->attrib("texCoord"), 2, GL_FLOAT, false, 0, texCoords.data()); //Współrzędne wierzchołków bierz z tablicy birdColors
-
-      glEnableVertexAttribArray(spLambertTextured->attrib("normal"));
-      glVertexAttribPointer(spLambertTextured->attrib("normal"), 4, GL_FLOAT, false, 0, norms.data()); //Współrzędne wierzchołków bierz  z tablicy birdColors
-
-     glActiveTexture(GL_TEXTURE0);
-     glBindTexture(GL_TEXTURE_2D, tex);
-     glUniform1i(spLambertTextured->uniform("tex"),0);
-
-     glDrawElements(GL_TRIANGLES,indices.size(), GL_UNSIGNED_INT, indices.data());
-
-     glDisableVertexAttribArray(spLambertTextured->attrib("vertex"));
-     glDisableVertexAttribArray(spLambertTextured->attrib("color"));
-     glDisableVertexAttribArray(spLambertTextured->attrib("normal"));
- }
-
-
 void drawScene(GLFWwindow *window) {
   glEnable(GL_DEPTH_TEST);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -227,6 +198,7 @@ void drawScene(GLFWwindow *window) {
     generateFence(basicShader, i);
     generateColumn(basicShader, i);
   }
+  generateRing(basicShader);
   for (int i = 0; i < total_snake; i++)
     snakeData[i].snake_coords[coord_index] += distance;
   generateSnake(basicShader, total_snake);
@@ -244,16 +216,38 @@ void drawScene(GLFWwindow *window) {
       total_snake = 1;
     }
   }
-     glm::mat4 M = glm::mat4(1.0f); //Zainicjuj macierz modelu macierzą jednostkową
-     glm::mat4 V = glm::lookAt(glm::vec3(0.0f, 0.0f, -5.0f), glm::vec3(0.0f,   0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f)); //Wylicz macierz widoku
-     glm::mat4 P = glm::perspective(glm::radians(50.0f), 1.0f, 1.0f, 50.0f); //Wylicz macierz rzutowania
- 
-     Ring(P, V, M);
-
 
   glfwSwapBuffers(window);
   return;
 }
+
+void genereteRing(ShaderProgram *basicShader){
+        
+     glEnableVertexAttribArray(basicShader->attrib("position"));
+     glVertexAttribPointer(basicShader->attrib("position"), 4, GL_FLOAT, false, 0, verts.data()); //Współrzędne wierzchołków bierz z tablicy birdVertices
+
+     glEnableVertexAttribArray(basicShader->attrib("texCoord"));
+     glVertexAttribPointer(basicShader->attrib("texCoord"), 2, GL_FLOAT, false, 0, texCoords.data()); //Współrzędne wierzchołków bierz z tablicy birdColors
+
+      glEnableVertexAttribArray(basicShader->attrib("normal"));
+      glVertexAttribPointer(basicShader->attrib("normal"), 4, GL_FLOAT, false, 0, norms.data()); //Współrzędne wierzchołków bierz  z tablicy birdColors
+
+     glActiveTexture(GL_TEXTURE0);
+     glBindTexture(GL_TEXTURE_2D, textureSampler);
+     glUniform1i(basicShader->uniform("textureSampler"),0);
+
+      glm::mat4 model = glm::mat4(1.0f);
+      model = glm::translate(model, glm::vec3(-0.311f, 0.0f, -0.311f));
+      glUniformMatrix4fv(basicShader->uniform("model"), 1, false,glm::value_ptr(model));
+
+
+     glDrawElements(GL_TRIANGLES,indices.size(), GL_UNSIGNED_INT, indices.data());
+
+     glDisableVertexAttribArray(basicShader->attrib("vertex"));
+     glDisableVertexAttribArray(basicShader->attrib("texCoord"));
+     glDisableVertexAttribArray(basicShader->attrib("normal"));
+ }
+
 
 void load_favicon(GLFWwindow *window) {
   GLFWimage icons[1];
@@ -296,8 +290,7 @@ void lookAt() {
   // TODO Refactoring
   GLint modelLoc = glGetUniformLocation(basicShader->shaderProgram, "model");
   GLint viewLoc = glGetUniformLocation(basicShader->shaderProgram, "view");
-  GLint projLoc =
-      glGetUniformLocation(basicShader->shaderProgram, "projection");
+  GLint projLoc = glGetUniformLocation(basicShader->shaderProgram, "projection");
 
   glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 
@@ -351,7 +344,7 @@ void update_direction(float angle) {
 }
 
  GLuint readTexture(const char* filename) {
-     GLuint tex;
+     GLuint textureSampler;
      glActiveTexture(GL_TEXTURE0);
  
      //Wczytanie do pamięci komputera
@@ -361,8 +354,8 @@ void update_direction(float angle) {
      unsigned error = lodepng::decode(image, width, height, filename);
  
      //Import do pamięci karty graficznej
-     glGenTextures(1, &tex); //Zainicjuj jeden uchwyt
-     glBindTexture(GL_TEXTURE_2D, tex); //Uaktywnij uchwyt
+     glGenTextures(1, &textureSampler); //Zainicjuj jeden uchwyt
+     glBindTexture(GL_TEXTURE_2D, textureSampler); //Uaktywnij uchwyt
      //Wczytaj obrazek do pamięci KG skojarzonej z uchwytem
      glTexImage2D(GL_TEXTURE_2D, 0, 4, width, height, 0,
          GL_RGBA, GL_UNSIGNED_BYTE, (unsigned char*)image.data());
@@ -370,6 +363,6 @@ void update_direction(float angle) {
      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
  
-     return tex;
+     return textureSampler;
 }
 

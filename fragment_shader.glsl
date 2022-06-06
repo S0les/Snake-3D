@@ -3,9 +3,11 @@
 uniform sampler2D textureSampler;
 
 in vec2 TexCoord;
-out vec4 color;
+in float i_nl;
+out vec4 pixelColor;
 
 void main()
 {
-    color = texture(textureSampler, TexCoord);
+    vec4 color = texture(textureSampler, TexCoord);
+    pixelColor=vec4(color.rgb*i_nl,color.a);
 }
