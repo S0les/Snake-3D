@@ -13,7 +13,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 #include <stdlib.h>
-#include <lodepng.h>
+#include "lodepng.h"
 //----------------------------
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
@@ -221,7 +221,7 @@ void drawScene(GLFWwindow *window) {
   return;
 }
 
-void genereteRing(ShaderProgram *basicShader){
+void generateRing(ShaderProgram *basicShader){
         
      glEnableVertexAttribArray(basicShader->attrib("position"));
      glVertexAttribPointer(basicShader->attrib("position"), 4, GL_FLOAT, false, 0, verts.data()); //Współrzędne wierzchołków bierz z tablicy birdVertices
@@ -237,7 +237,9 @@ void genereteRing(ShaderProgram *basicShader){
      glUniform1i(basicShader->uniform("textureSampler"),0);
 
       glm::mat4 model = glm::mat4(1.0f);
-      model = glm::translate(model, glm::vec3(-0.311f, 0.0f, -0.311f));
+      model = glm::translate(model, glm::vec3(-0.311f, 0.5f, -0.311f));
+      model = glm::rotate(model,(GLfloat)glfwGetTime() * 1.0f,glm::vec3(0.0f, 1.0f, 0.0f));
+      model = glm::scale(model,glm::vec3(0.3f, 0.3f, 0.3f));
       glUniformMatrix4fv(basicShader->uniform("model"), 1, false,glm::value_ptr(model));
 
 
