@@ -13,11 +13,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 #include <stdlib.h>
-int total_snake = 1;
 int aspectRatio = 1;
-float distance = -0.05f;
-float rotate_angle = 0.f;
-float snake_coords[2] = {0.f, 0.f};
 const GLuint WIDTH = 1080, HEIGHT = 800;
 bool keys[1024];
 
@@ -82,15 +78,9 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action,
     glfwSetWindowShouldClose(window, GL_TRUE);
 
   if ((key == GLFW_KEY_D) && action == GLFW_PRESS) {
-    update_direction(1.5708f, total_snake, distance);
-    if (state == 0)
-      distance *= -1.0f;
   }
 
   if ((key == GLFW_KEY_A) && action == GLFW_PRESS) {
-    update_direction(-1.5708f, total_snake, distance);
-    if (state == 1)
-      distance *= -1.0f;
   }
 
   //  if (key >= 0 && key < 1024) {
@@ -129,22 +119,7 @@ void drawScene(GLFWwindow *window) {
   glEnable(GL_DEPTH_TEST);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   basicShader->use();
-  snakeData[0].snake_coords[snakeData[0].index] += distance;
-  for (int i = 0; i < 2; i++) {
-    if (snakeData[0].snake_coords[i] > 9.49f ||
-        snakeData[0].snake_coords[i] < -10.12f) {
-      for (int j = 0; j < total_snake; j++) {
-        snakeData[j].snake_coords[0] = 0.f;
-        snakeData[j].snake_coords[1] = 0.f + 0.625 * j;
-      }
-      snakeData[0].index = 1;
-      state = 1;
-      snakeData[0].rotate_angle = 0.f;
-      distance = -0.05f;
-      total_snake = 1;
-    }
-  }
-  generateObjects(total_snake);
+  generateObjects();
   glfwSwapBuffers(window);
   return;
 }
@@ -178,10 +153,9 @@ void lookAt() {
   view = camera.GetViewMatrix();
   glm::mat4 projection = glm::mat4(1.0f);
   model = glm::rotate(model, 0.0f, glm::vec3(0.5f, 1.0f, 0.0f));
-  view =
-      glm::rotate(view, snakeData[0].rotate_angle, glm::vec3(0.0f, 1.0f, 0.0f));
-  view = glm::translate(view, glm::vec3(-snakeData[0].snake_coords[0], -1.2f,
-                                        -snakeData[0].snake_coords[1]));
+  view = glm::rotate(view, 0.f, glm::vec3(0.0f, 1.0f, 0.0f));
+  view = glm::rotate(view, 0.5f, glm::vec3(1.0f, 0.0f, 0.0f));
+  view = glm::translate(view, glm::vec3(0.f, -1.5f, 0.f));
   // view = glm::rotate(view, 1.5708f, glm::vec3(1.0f, 0.0f, 0.0f));
   // view = glm::translate(view, glm::vec3(0.0f, -20.0f, 0.0f));
   projection = glm::perspective(camera.Zoom, (GLfloat)WIDTH / (GLfloat)HEIGHT,

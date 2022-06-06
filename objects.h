@@ -12,27 +12,16 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-struct SnakeInfo {
-  float rotate_angle;
-  float snake_coords[2];
-  GLuint texture;
-  int index;
-  int index_old;
-};
-
 extern GLuint map_texture;
 extern GLuint column_texture;
 extern GLuint fence_texture;
 extern GLuint snake_texture;
-extern SnakeInfo snakeData[];
-extern int state;
 
 GLuint loadTexture(const char *filepath);
 void initObjects(void);
-void generateObjects(int total_snake);
+void generateObjects(void);
 void generateMap(ShaderProgram *basicShader);
-void generateSnake(ShaderProgram *basicShader, int total_snake);
+void generateSnake(ShaderProgram *basicShader);
 void generateFence(ShaderProgram *basicShader, int fenceNumber);
 void generateColumn(ShaderProgram *basicShader, int columnNumber);
-void update_direction(float angle, int total_snake, float distance);
 #endif

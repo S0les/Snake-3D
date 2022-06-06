@@ -5,21 +5,12 @@ GLuint map_texture;
 GLuint column_texture;
 GLuint fence_texture;
 GLuint snake_texture;
-SnakeInfo snakeData[1024];
-int state = 1;
 
 void initObjects(void) {
   map_texture = loadTexture("images/map-texture.png");
   fence_texture = loadTexture("images/bricks.png");
   column_texture = loadTexture("images/bricks.png");
   snake_texture = loadTexture("images/snake.jpg");
-  for (int i = 0; i < 1024; i++) {
-    for (int j = 0; j < 2; j++)
-      snakeData[i].snake_coords[j] = 0.f;
-    snakeData[i].index = 1;
-    snakeData[i].index_old = 1;
-    snakeData[i].texture = snake_texture;
-  }
 }
 
 GLuint loadTexture(const char *filepath) {
@@ -42,8 +33,8 @@ GLuint loadTexture(const char *filepath) {
   return texture;
 }
 
-void generateObjects(int total_snake) {
-  generateSnake(basicShader, total_snake);
+void generateObjects() {
+  generateSnake(basicShader);
   generateMap(basicShader);
   for (int i = 0; i < 4; i++) {
     generateFence(basicShader, i);
@@ -127,47 +118,27 @@ void generateColumn(ShaderProgram *basicShader, int columnNumber) {
   glDisableVertexAttribArray(basicShader->attrib("texCoord"));
 }
 
-void generateSnake(ShaderProgram *basicShader, int total_snake) {
-  for (int i = 0; i < total_snake; i++) {
-    glEnableVertexAttribArray(basicShader->attrib("position"));
-    glVertexAttribPointer(basicShader->attrib("position"), 4, GL_FLOAT, false,
-                          0, cube_vertices);
+void generateSnake(ShaderProgram *basicShader) {
+  glEnableVertexAttribArray(basicShader->attrib("position"));
+  glVertexAttribPointer(basicShader->attrib("position"), 4, GL_FLOAT, false, 0,
+                        cube_vertices);
 
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, snakeData[i].texture);
-    glUniform1i(basicShader->uniform("textureSampler"), 0);
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, snake_texture);
+  glUniform1i(basicShader->uniform("textureSampler"), 0);
 
-    glm::mat4 model = glm::mat4(1.0f);
-    model =
-        glm::translate(model, glm::vec3(snakeData[i].snake_coords[0], 0.311f,
-                                        snakeData[i].snake_coords[1]));
-    model = glm::scale(model, glm::vec3(0.311f, 0.311f, 0.311f));
-    model = glm::rotate(model, -snakeData[i].rotate_angle,
-                        glm::vec3(0.f, 1.f, 0.f));
-    glUniformMatrix4fv(basicShader->uniform("model"), 1, false,
-                       glm::value_ptr(model));
+  glm::mat4 model = glm::mat4(1.0f);
+  model = glm::translate(model, glm::vec3(0.f, 0.311f, 0.f));
+  model = glm::scale(model, glm::vec3(0.311f, 0.311f, 0.311f));
+  model = glm::rotate(model, 0.f, glm::vec3(0.f, 1.f, 0.f));
+  glUniformMatrix4fv(basicShader->uniform("model"), 1, false,
+                     glm::value_ptr(model));
 
-    glEnableVertexAttribArray(basicShader->attrib("texCoord"));
-    glVertexAttribPointer(basicShader->attrib("texCoord"), 2, GL_FLOAT, false,
-                          0, cube_tex_coords);
+  glEnableVertexAttribArray(basicShader->attrib("texCoord"));
+  glVertexAttribPointer(basicShader->attrib("texCoord"), 2, GL_FLOAT, false, 0,
+                        cube_tex_coords);
 
-    glDrawArrays(GL_TRIANGLES, 0, cube_vertexcount);
-    glDisableVertexAttribArray(basicShader->attrib("position"));
-    glDisableVertexAttribArray(basicShader->attrib("texCoord"));
-  }
-}
-
-void update_direction(float angle, int total_snake, float distance) {
-  if (distance >= 0) {
-    snakeData[0].snake_coords[snakeData[0].index] =
-        (ceil(snakeData[0].snake_coords[snakeData[0].index] / 0.625f)) * 0.625f;
-  } else {
-    snakeData[0].snake_coords[snakeData[0].index] =
-        (floor(snakeData[0].snake_coords[snakeData[0].index] / 0.625f)) *
-        0.625f;
-  }
-  snakeData[0].index_old = snakeData[0].index;
-  snakeData[0].index = (snakeData[0].index + 1) % 2;
-  state = (state + 1) % 2;
-  snakeData[0].rotate_angle += angle;
+  glDrawArrays(GL_TRIANGLES, 0, cube_vertexcount);
+  glDisableVertexAttribArray(basicShader->attrib("position"));
+  glDisableVertexAttribArray(basicShader->attrib("texCoord"));
 }
