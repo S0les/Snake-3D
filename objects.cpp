@@ -1,4 +1,20 @@
 #include "objects.h"
+#include <vector>
+#include <GLFW/glfw3.h>
+
+//----------------------------
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+//---------------------------
+
+GLuint textureSampler;
+//-----------Assimp----------------
+std::vector<glm::vec4> verts;
+std::vector<glm::vec4> norms;
+std::vector<glm::vec2> texCoords;
+std::vector<unsigned int> indices;
+//----------------------------
 
 GLuint map_texture;
 GLuint column_texture;
@@ -11,6 +27,8 @@ void initObjects(void){
   fence_texture = loadTexture("images/bricks.png");
   column_texture = loadTexture("images/bricks.png");
   snake_texture = loadTexture("images/snake.jpg");
+  textureSampler = loadTexture("images/Gold_Band_Textures_2K/gold band ring_BaseColor.png");
+
   for (int i = 0; i < 1024; i++) {
     for (int j = 0; j < 2; j++)
       snakeData[i].snake_coords[j] = 0.f;
@@ -142,3 +160,74 @@ void generateSnake(ShaderProgram *basicShader, int total_snake) {
     glDisableVertexAttribArray(basicShader->attrib("texCoord"));
   }
 }
+
+void loadModel(std::string plik){
+
+        using namespace std;
+
+        Assimp::Importer importer;
+        const aiScene* scene = importer.ReadFile(plik,aiProcess_Triangulate | aiProcess_FlipUVs |aiProcess_GenSmoothNormals);
+        cout << importer.GetErrorString() << endl;
+        aiMesh* mesh = scene->mMeshes[0];
+
+        for(int i = 0; i < mesh ->mNumVertices; i++)
+        {
+            aiVector3D vertex = mesh->mVertices[i];
+            verts.push_back(glm::vec4(vertex.x,vertex.y,vertex.z,  1));
+
+            aiVector3D normal = mesh->mNormals[i];
+            norms.push_back(glm::vec4(normal.x,normal.y,normal.z,  0));
+
+            aiVector3D texCoord = mesh->mTextureCoords[0][i];
+            texCoords.push_back(glm::vec2(texCoord.x,texCoord.y));
+        }
+        for (int i = 0 ; i < mesh->mNumFaces; i++){
+            aiFace& face = mesh->mFaces[i];
+
+            for(int j = 0; j < face.mNumIndices; j++ )
+            {
+                indices.push_back(face.mIndices[j]);
+            }
+        }
+
+        aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+
+        for(int i = 0; i < material->GetTextureCount(aiTextureType_DIFFUSE);i++)
+        {
+            aiString str;
+            material -> GetTexture(aiTextureType_DIFFUSE,i,&str);
+        }
+}
+
+
+void generateRing(ShaderProgram *basicShader){
+
+     glEnableVertexAttribArray(basicShader->attrib("position"));
+     glVertexAttribPointer(basicShader->attrib("position"), 4, GL_FLOAT, false, 0, verts.data()); //Współrzędne wierzchołków bierz z tablicy birdVertices
+
+     glEnableVertexAttribArray(basicShader->attrib("texCoord"));
+     glVertexAttribPointer(basicShader->attrib("texCoord"), 2, GL_FLOAT, false, 0, texCoords.data()); //Współrzędne wierzchołków bierz z tablicy birdColors
+
+      glEnableVertexAttribArray(basicShader->attrib("normal"));
+      glVertexAttribPointer(basicShader->attrib("normal"), 4, GL_FLOAT, false, 0, norms.data()); //Współrzędne wierzchołków bierz  z tablicy birdColors
+
+     glActiveTexture(GL_TEXTURE0);
+     glBindTexture(GL_TEXTURE_2D, textureSampler);
+     glUniform1i(basicShader->uniform("textureSampler"),0);
+
+      glm::mat4 model = glm::mat4(1.0f);
+      model = glm::translate(model, glm::vec3(-0.311f, 0.5f, -0.311f));
+      model = glm::rotate(model,(GLfloat)glfwGetTime() * 1.0f,glm::vec3(0.0f, 1.0f, 0.0f));
+      model = glm::scale(model,glm::vec3(0.3f, 0.3f, 0.3f));
+      glUniformMatrix4fv(basicShader->uniform("model"), 1, false,glm::value_ptr(model));
+
+
+     glDrawElements(GL_TRIANGLES,indices.size(), GL_UNSIGNED_INT, indices.data());
+
+     glDisableVertexAttribArray(basicShader->attrib("vertex"));
+     glDisableVertexAttribArray(basicShader->attrib("texCoord"));
+     glDisableVertexAttribArray(basicShader->attrib("normal"));
+ }
+
+
+

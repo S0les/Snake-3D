@@ -13,12 +13,6 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 #include <stdlib.h>
-#include "lodepng.h"
-//----------------------------
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
-#include <assimp/postprocess.h>
-//---------------------------
 
 int total_snake = 1;
 int aspectRatio = 1;
@@ -38,16 +32,6 @@ bool firstMouse = true;
 
 GLfloat deltaTime = 0.0f;
 GLfloat lastFrame = 0.0f;
-
-
-GLuint textureSampler;
-//-----------Assimp----------------
-std::vector<glm::vec4> verts;
-std::vector<glm::vec4> norms;
-std::vector<glm::vec2> texCoords;
-std::vector<unsigned int> indices;
-//----------------------------
-
 
 void lookAt();
 void key_callback(GLFWwindow *window, int key, int scancode, int action,
@@ -137,7 +121,6 @@ void initOpenglProgram(GLFWwindow *window) {
   glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
   glfwSetKeyCallback(window, key_callback);
   initObjects();
-  textureSampler = readTexture("images/Gold_Band_Textures_2K/gold band ring_BaseColor.png");
   loadModel(std::string("Gold_Band_Ring_FBX.fbx"));
 
   return;
@@ -150,45 +133,7 @@ void freeOpenglProgram(GLFWwindow *window) {
   glfwDestroyWindow(window);
   return;
 }
-
- void loadModel(std::string plik){
  
-         using namespace std;
- 
-         Assimp::Importer importer;
-         const aiScene* scene = importer.ReadFile(plik,aiProcess_Triangulate | aiProcess_FlipUVs |aiProcess_GenSmoothNormals);
-         cout << importer.GetErrorString() << endl;
-         aiMesh* mesh = scene->mMeshes[0];
- 
-         for(int i = 0; i < mesh ->mNumVertices; i++)
-         {
-             aiVector3D vertex = mesh->mVertices[i];
-             verts.push_back(glm::vec4(vertex.x,vertex.y,vertex.z,  1));
- 
-             aiVector3D normal = mesh->mNormals[i];
-             norms.push_back(glm::vec4(normal.x,normal.y,normal.z,  0));
- 
-             aiVector3D texCoord = mesh->mTextureCoords[0][i];
-             texCoords.push_back(glm::vec2(texCoord.x,texCoord.y));
-         }
-         for (int i = 0 ; i < mesh->mNumFaces; i++){
-             aiFace& face = mesh->mFaces[i];
- 
-             for(int j = 0; j < face.mNumIndices; j++ )
-             {
-                 indices.push_back(face.mIndices[j]);
-             }
-         }
- 
-         aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
- 
-         for(int i = 0; i < material->GetTextureCount(aiTextureType_DIFFUSE);i++)
-         {
-             aiString str;
-             material -> GetTexture(aiTextureType_DIFFUSE,i,&str);
-         }
-     }
-
 void drawScene(GLFWwindow *window) {
   glEnable(GL_DEPTH_TEST);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -220,35 +165,6 @@ void drawScene(GLFWwindow *window) {
   glfwSwapBuffers(window);
   return;
 }
-
-void generateRing(ShaderProgram *basicShader){
-        
-     glEnableVertexAttribArray(basicShader->attrib("position"));
-     glVertexAttribPointer(basicShader->attrib("position"), 4, GL_FLOAT, false, 0, verts.data()); //Współrzędne wierzchołków bierz z tablicy birdVertices
-
-     glEnableVertexAttribArray(basicShader->attrib("texCoord"));
-     glVertexAttribPointer(basicShader->attrib("texCoord"), 2, GL_FLOAT, false, 0, texCoords.data()); //Współrzędne wierzchołków bierz z tablicy birdColors
-
-      glEnableVertexAttribArray(basicShader->attrib("normal"));
-      glVertexAttribPointer(basicShader->attrib("normal"), 4, GL_FLOAT, false, 0, norms.data()); //Współrzędne wierzchołków bierz  z tablicy birdColors
-
-     glActiveTexture(GL_TEXTURE0);
-     glBindTexture(GL_TEXTURE_2D, textureSampler);
-     glUniform1i(basicShader->uniform("textureSampler"),0);
-
-      glm::mat4 model = glm::mat4(1.0f);
-      model = glm::translate(model, glm::vec3(-0.311f, 0.5f, -0.311f));
-      model = glm::rotate(model,(GLfloat)glfwGetTime() * 1.0f,glm::vec3(0.0f, 1.0f, 0.0f));
-      model = glm::scale(model,glm::vec3(0.3f, 0.3f, 0.3f));
-      glUniformMatrix4fv(basicShader->uniform("model"), 1, false,glm::value_ptr(model));
-
-
-     glDrawElements(GL_TRIANGLES,indices.size(), GL_UNSIGNED_INT, indices.data());
-
-     glDisableVertexAttribArray(basicShader->attrib("vertex"));
-     glDisableVertexAttribArray(basicShader->attrib("texCoord"));
-     glDisableVertexAttribArray(basicShader->attrib("normal"));
- }
 
 
 void load_favicon(GLFWwindow *window) {
@@ -345,26 +261,4 @@ void update_direction(float angle) {
   snakeData[0].rotate_angle += angle;
 }
 
- GLuint readTexture(const char* filename) {
-     GLuint textureSampler;
-     glActiveTexture(GL_TEXTURE0);
- 
-     //Wczytanie do pamięci komputera
-     std::vector<unsigned char> image;   //Alokuj wektor do wczytania obrazka
-     unsigned width, height;   //Zmienne do których wczytamy wymiary obrazka
-     //Wczytaj obrazek
-     unsigned error = lodepng::decode(image, width, height, filename);
- 
-     //Import do pamięci karty graficznej
-     glGenTextures(1, &textureSampler); //Zainicjuj jeden uchwyt
-     glBindTexture(GL_TEXTURE_2D, textureSampler); //Uaktywnij uchwyt
-     //Wczytaj obrazek do pamięci KG skojarzonej z uchwytem
-     glTexImage2D(GL_TEXTURE_2D, 0, 4, width, height, 0,
-         GL_RGBA, GL_UNSIGNED_BYTE, (unsigned char*)image.data());
- 
-     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
- 
-     return textureSampler;
-}
 
