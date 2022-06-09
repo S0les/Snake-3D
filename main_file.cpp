@@ -59,11 +59,12 @@ int main(int argc, char *argv[]) {
 
   while (!glfwWindowShouldClose(window)) {
 
+    snake_save_old_angle();
+    do_movement(window);
     lookAt();
     drawScene(window);
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwPollEvents();
-    do_movement(window);
   }
 
   freeShaders();
@@ -95,7 +96,6 @@ void initOpenglProgram(GLFWwindow *window) {
   glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
   glfwSetKeyCallback(window, key_callback);
   initObjects();
-  reset_snake();
   return;
 }
 
@@ -146,9 +146,10 @@ void lookAt() {
   view = camera.GetViewMatrix();
   glm::mat4 projection = glm::mat4(1.0f);
   view = glm::rotate(view, 0.5f, glm::vec3(1.0f, 0.0f, 0.0f));
-  view = glm::rotate(view, SnakeData[0].snake_rotate_angle, glm::vec3(0.0f, 1.0f, 0.0f));
-  view =
-      glm::translate(view, glm::vec3(SnakeData[0].snake_coords[0], -1.5f, SnakeData[0].snake_coords[1]));
+  view = glm::rotate(view, SnakeData[0].snake_rotate_angle,
+                     glm::vec3(0.0f, 1.0f, 0.0f));
+  view = glm::translate(view, glm::vec3(SnakeData[0].snake_coords[0], -1.5f,
+                                        SnakeData[0].snake_coords[1]));
   // view = glm::rotate(view, 1.5708f, glm::vec3(1.0f, 0.0f, 0.0f));
   // view = glm::translate(view, glm::vec3(0.0f, -20.0f, 0.0f));
   projection = glm::perspective(camera.Zoom, (GLfloat)WIDTH / (GLfloat)HEIGHT,
@@ -196,11 +197,13 @@ void do_movement(GLFWwindow *window) {
 
   if (keys[GLFW_KEY_D]) {
     SnakeData[0].snake_rotate_angle += 0.0523599;
-    SnakeData[0].snake_rotate_angle = remainder(SnakeData[0].snake_rotate_angle, 6.28319f);
+    SnakeData[0].snake_rotate_angle =
+        remainder(SnakeData[0].snake_rotate_angle, 6.28319f);
   }
 
   if (keys[GLFW_KEY_A]) {
     SnakeData[0].snake_rotate_angle -= 0.0523599;
-    SnakeData[0].snake_rotate_angle = remainder(SnakeData[0].snake_rotate_angle, 6.28319f);
+    SnakeData[0].snake_rotate_angle =
+        remainder(SnakeData[0].snake_rotate_angle, 6.28319f);
   }
 }

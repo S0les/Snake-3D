@@ -15,6 +15,7 @@
 struct Snake {
   float snake_coords[2];
   float snake_rotate_angle;
+  float snake_rotate_angle_old;
   GLuint snake_texture;
   float snake_history[10];
 };
@@ -30,6 +31,7 @@ GLuint loadTexture(const char *filepath);
 void initObjects(void);
 void reset_snake(void);
 void update_snake_coords(void);
+void snake_save_old_angle(void); 
 void generateObjects(void);
 void generateMap(ShaderProgram *basicShader);
 void generateSnake(ShaderProgram *basicShader, Snake curr_snake);

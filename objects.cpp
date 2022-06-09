@@ -8,12 +8,13 @@ GLuint column_texture;
 GLuint fence_texture;
 GLuint snake_texture;
 
-float snake_speed = 0.1f;
-int snake_total = 1;
+float snake_speed = 0.05f;
+int snake_total = 7;
+int trigger = 0;
 Snake SnakeData[1024];
 
 void initObjects(void) {
- 
+
   map_texture = loadTexture("images/map-texture.png");
   fence_texture = loadTexture("images/bricks.png");
   column_texture = loadTexture("images/bricks.png");
@@ -26,9 +27,10 @@ void reset_snake(void) {
     SnakeData[i].snake_coords[0] = 0.f;
     SnakeData[i].snake_coords[1] = 0.f;
     SnakeData[i].snake_rotate_angle = 0.f;
+    SnakeData[i].snake_rotate_angle_old = 0.f;
     SnakeData[i].snake_texture = snake_texture;
   }
-  snake_total = 1;
+  // snake_total = 2;
 }
 
 GLuint loadTexture(const char *filepath) {
@@ -172,4 +174,24 @@ void update_snake_coords() {
   SnakeData[0].snake_coords[1] =
       SnakeData[0].snake_coords[1] +
       snake_speed * sin(SnakeData[0].snake_rotate_angle + 1.5708f);
-};
+  for (int i = 1; i < snake_total; i++) {
+    float x_coord =
+        SnakeData[i - 1].snake_coords[0] +
+        0.650f * -cos(SnakeData[i - 1].snake_rotate_angle_old + 1.5708f);
+    float y_coord =
+        SnakeData[i - 1].snake_coords[1] +
+        0.650f * -sin(SnakeData[i - 1].snake_rotate_angle_old + 1.5708f);
+    SnakeData[i].snake_coords[0] = x_coord;
+    SnakeData[i].snake_coords[1] = y_coord;
+    SnakeData[i].snake_rotate_angle = SnakeData[i - 1].snake_rotate_angle_old;
+  }
+  trigger++;
+}
+
+void snake_save_old_angle(void) {
+  if (trigger == 13) {
+    trigger = 0;
+    for (int i = 0; i < snake_total; i++)
+      SnakeData[i].snake_rotate_angle_old = SnakeData[i].snake_rotate_angle;
+  }
+}
