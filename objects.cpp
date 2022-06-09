@@ -10,7 +10,6 @@ GLuint snake_texture;
 
 float snake_speed = 0.05f;
 int snake_total = 7;
-int trigger = 0;
 Snake SnakeData[1024];
 
 void initObjects(void) {
@@ -27,7 +26,8 @@ void reset_snake(void) {
     SnakeData[i].snake_coords[0] = 0.f;
     SnakeData[i].snake_coords[1] = 0.f;
     SnakeData[i].snake_rotate_angle = 0.f;
-    SnakeData[i].snake_rotate_angle_old = 0.f;
+    for (int j = 0; j < 13; j++)
+      SnakeData[i].snake_rotate_angle_old[j] = 0.f;
     SnakeData[i].snake_texture = snake_texture;
   }
   // snake_total = 2;
@@ -174,24 +174,28 @@ void update_snake_coords() {
   SnakeData[0].snake_coords[1] =
       SnakeData[0].snake_coords[1] +
       snake_speed * sin(SnakeData[0].snake_rotate_angle + 1.5708f);
+  SnakeData[0].snake_rotate_angle_old[0] = SnakeData[0].snake_rotate_angle;
   for (int i = 1; i < snake_total; i++) {
     float x_coord =
         SnakeData[i - 1].snake_coords[0] +
-        0.650f * -cos(SnakeData[i - 1].snake_rotate_angle_old + 1.5708f);
+        0.650f * -cos(SnakeData[i - 1].snake_rotate_angle_old[12] + 1.5708f);
     float y_coord =
         SnakeData[i - 1].snake_coords[1] +
-        0.650f * -sin(SnakeData[i - 1].snake_rotate_angle_old + 1.5708f);
+        0.650f * -sin(SnakeData[i - 1].snake_rotate_angle_old[12] + 1.5708f);
     SnakeData[i].snake_coords[0] = x_coord;
     SnakeData[i].snake_coords[1] = y_coord;
-    SnakeData[i].snake_rotate_angle = SnakeData[i - 1].snake_rotate_angle_old;
+    SnakeData[i].snake_rotate_angle =
+        SnakeData[i].snake_rotate_angle_old[0];
   }
-  trigger++;
 }
 
 void snake_save_old_angle(void) {
-  if (trigger == 13) {
-    trigger = 0;
-    for (int i = 0; i < snake_total; i++)
-      SnakeData[i].snake_rotate_angle_old = SnakeData[i].snake_rotate_angle;
+  for (int i = snake_total - 1; i > -1; i--) {
+    for (int j = 12; j > 0; j--)
+      SnakeData[i].snake_rotate_angle_old[j] =
+          SnakeData[i].snake_rotate_angle_old[j - 1];
+    if (i != 0)
+      SnakeData[i].snake_rotate_angle_old[0] =
+          SnakeData[i - 1].snake_rotate_angle_old[12];
   }
 }
