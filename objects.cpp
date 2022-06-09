@@ -27,7 +27,7 @@ void initObjects(void){
   fence_texture = loadTexture("images/bricks.png");
   column_texture = loadTexture("images/bricks.png");
   snake_texture = loadTexture("images/snake.jpg");
-  textureSampler = loadTexture("images/Gold_Band_Textures_2K/gold band ring_BaseColor.png");
+  textureSampler = loadTexture("images/apple_tex.jpg");
 
   for (int i = 0; i < 1024; i++) {
     for (int j = 0; j < 2; j++)
@@ -216,7 +216,7 @@ void generateRing(ShaderProgram *basicShader){
      glUniform1i(basicShader->uniform("textureSampler"),0);
 
       glm::mat4 model = glm::mat4(1.0f);
-      model = glm::translate(model, glm::vec3(-0.311f, 0.5f, -0.311f));
+      model = glm::translate(model, glm::vec3(-0.311f, 0.3f, -0.311f));
       model = glm::rotate(model,(GLfloat)glfwGetTime() * 1.0f,glm::vec3(0.0f, 1.0f, 0.0f));
       model = glm::scale(model,glm::vec3(0.3f, 0.3f, 0.3f));
       glUniformMatrix4fv(basicShader->uniform("model"), 1, false,glm::value_ptr(model));

@@ -121,7 +121,7 @@ void initOpenglProgram(GLFWwindow *window) {
   glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
   glfwSetKeyCallback(window, key_callback);
   initObjects();
-  loadModel(std::string("Gold_Band_Ring_FBX.fbx"));
+  loadModel(std::string("apple.FBX"));
 
   return;
 }
