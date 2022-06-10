@@ -15,6 +15,7 @@
 struct Snake {
   float snake_coords[2];
   float snake_rotate_angle;
+  float snake_pos_old[13][2];
   float snake_rotate_angle_old[13];
   GLuint snake_texture;
   float snake_history[10];
