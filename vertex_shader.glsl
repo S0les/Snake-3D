@@ -12,7 +12,7 @@ in vec4 position;
 in vec2 texCoord;
 
 out vec2 TexCoord;
-out vec3 Normal;
+out vec4 Normal;
 out vec3 FragPos;
 
 void main()
@@ -21,7 +21,7 @@ void main()
     
     mat4 G=mat4(inverse(transpose(mat3(model))));
     vec4 n=normalize(view*G*normal);
-    
-
+    FragPos = vec3(model * position);
+    Normal = normal;
     TexCoord = texCoord;
 }
