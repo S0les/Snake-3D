@@ -120,6 +120,7 @@ void drawScene(GLFWwindow *window) {
   basicShader->use();
   generateObjects();
   update_snake_coords();
+  check_collision();
   glfwSwapBuffers(window);
   return;
 }

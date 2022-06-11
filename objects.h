@@ -31,6 +31,7 @@ extern float snake_speed;
 GLuint loadTexture(const char *filepath);
 void initObjects(void);
 void reset_snake(void);
+void check_collision(void);
 void update_snake_coords(void);
 void snake_save_old_angle(void); 
 void generateObjects(void);

@@ -9,7 +9,7 @@ GLuint fence_texture;
 GLuint snake_texture;
 
 float snake_speed = 0.05f;
-int snake_total = 1;
+int snake_total;
 Snake SnakeData[1024];
 
 void initObjects(void) {
@@ -26,13 +26,14 @@ void reset_snake(void) {
     SnakeData[i].snake_coords[0] = 0.f;
     SnakeData[i].snake_coords[1] = 0.f;
     SnakeData[i].snake_rotate_angle = 0.f;
-    for (int j = 0; j < 13; j++){
+    for (int j = 0; j < 13; j++) {
       SnakeData[i].snake_rotate_angle_old[j] = 0.f;
       SnakeData[i].snake_pos_old[j][0] = 0.f;
       SnakeData[i].snake_pos_old[j][1] = 0.f;
     }
-      SnakeData[i].snake_texture = snake_texture;
+    SnakeData[i].snake_texture = snake_texture;
   }
+  snake_total = 1;
 }
 
 GLuint loadTexture(const char *filepath) {
@@ -189,16 +190,34 @@ void update_snake_coords() {
 void snake_save_old_angle(void) {
   for (int i = 1023; i > -1; i--) {
     for (int j = 12; j > 0; j--) {
-      SnakeData[i].snake_rotate_angle_old[j] = SnakeData[i].snake_rotate_angle_old[j-1];
+      SnakeData[i].snake_rotate_angle_old[j] =
+          SnakeData[i].snake_rotate_angle_old[j - 1];
       SnakeData[i].snake_pos_old[j][0] = SnakeData[i].snake_pos_old[j - 1][0];
       SnakeData[i].snake_pos_old[j][1] = SnakeData[i].snake_pos_old[j - 1][1];
     }
     if (i != 0) {
-      SnakeData[i].snake_rotate_angle_old[0] = SnakeData[i-1].snake_rotate_angle_old[12];
-      SnakeData[i].snake_pos_old[0][0] =
-          SnakeData[i - 1].snake_pos_old[12][0];
-      SnakeData[i].snake_pos_old[0][1] =
-          SnakeData[i - 1].snake_pos_old[12][1];
+      SnakeData[i].snake_rotate_angle_old[0] =
+          SnakeData[i - 1].snake_rotate_angle_old[12];
+      SnakeData[i].snake_pos_old[0][0] = SnakeData[i - 1].snake_pos_old[12][0];
+      SnakeData[i].snake_pos_old[0][1] = SnakeData[i - 1].snake_pos_old[12][1];
+    }
+  }
+}
+
+void check_collision() {
+  float x = SnakeData[0].snake_coords[0];
+  float y = SnakeData[0].snake_coords[1];
+  if (y < -9.4f || y > 10.f || x < -9.4f || x > 10.f) {
+    reset_snake();
+    return;
+  }
+  for (int i = 1; i < snake_total; i++) {
+    double squared_x = pow((SnakeData[i].snake_coords[0] - x), 2);
+    double squared_y = pow((SnakeData[i].snake_coords[1] - y), 2);
+    double distance = sqrt(squared_y + squared_x);
+    if (distance < 0.6f) {
+      reset_snake();
+      return;
     }
   }
 }
