@@ -35,6 +35,7 @@ void check_collision(void);
 void update_snake_coords(void);
 void snake_save_old_angle(void); 
 void generateObjects(void);
+void generateRing(ShaderProgram *basicShader);
 void generateMap(ShaderProgram *basicShader);
 void generateSnake(ShaderProgram *basicShader, Snake curr_snake);
 void generateFence(ShaderProgram *basicShader, int fenceNumber);

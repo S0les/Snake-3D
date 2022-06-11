@@ -73,6 +73,7 @@ GLuint loadTexture(const char *filepath) {
 }
 
 void generateObjects() {
+  generateRing(basicShader);
   for (int i = 0; i < snake_total; i++)
     generateSnake(basicShader, SnakeData[i]);
   generateMap(basicShader);

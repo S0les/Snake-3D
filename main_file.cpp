@@ -36,7 +36,6 @@ void initOpenglProgram(GLFWwindow *window);
 void freeOpenglProgram(GLFWwindow *window);
 void drawScene(GLFWwindow *window);
 void initWindow(GLFWwindow *window);
-void generateRing(ShaderProgram *basicShader);
 void loadModel(std::string plik);
 void do_movement(GLFWwindow *window);
 
@@ -121,7 +120,6 @@ void drawScene(GLFWwindow *window) {
   glEnable(GL_DEPTH_TEST);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   basicShader->use();
-  generateRing(basicShader);
   generateObjects();
   update_snake_coords();
   check_collision();
