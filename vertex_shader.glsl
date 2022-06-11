@@ -12,7 +12,8 @@ in vec4 position;
 in vec2 texCoord;
 
 out vec2 TexCoord;
-out float i_nl;
+out vec3 Normal;
+out vec3 FragPos;
 
 void main()
 {
@@ -21,10 +22,6 @@ void main()
     mat4 G=mat4(inverse(transpose(mat3(model))));
     vec4 n=normalize(view*G*normal);
     
-    i_nl=1;// if i_nl = 1 - shadows then there will be no
-    //Shadow function
-    //clamp(dot(n,lightDir),0,1);
-
 
     TexCoord = texCoord;
 }
