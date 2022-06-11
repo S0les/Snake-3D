@@ -1,7 +1,11 @@
 #version 330 core
+
+uniform sampler2D textureSampler;
+
+in vec2 TexCoord;
 out vec4 color;
 
 void main()
 {
-    color = vec4(1.0f); // Устанавливает все 4 компоненты вектора равными 1.0f
+    color = texture(textureSampler, TexCoord);
 }
