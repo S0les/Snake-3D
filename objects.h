@@ -41,4 +41,5 @@ void generateMap(ShaderProgram *basicShader);
 void generateSnake(ShaderProgram *basicShader, Snake curr_snake);
 void generateFence(ShaderProgram *basicShader, int fenceNumber);
 void generateColumn(ShaderProgram *basicShader, int columnNumber);
+void generateLamp(ShaderProgram *lampShader, int lampNumber);
 #endif

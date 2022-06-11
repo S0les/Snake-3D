@@ -25,4 +25,5 @@ public:
 };
 
 extern ShaderProgram *basicShader;
+extern ShaderProgram *lampShader;
 #endif

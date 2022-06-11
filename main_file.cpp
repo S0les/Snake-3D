@@ -179,6 +179,15 @@ void lookAt() {
   glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
 
   glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
+
+  lampShader->use();
+  GLint LampViewLoc =
+      glGetUniformLocation(lampShader->shaderProgram, "lamp_view");
+  GLint LampProjLoc =
+      glGetUniformLocation(lampShader->shaderProgram, "lamp_projection");
+
+  glUniformMatrix4fv(LampViewLoc, 1, GL_FALSE, glm::value_ptr(view));
+  glUniformMatrix4fv(LampProjLoc, 1, GL_FALSE, glm::value_ptr(projection));
 }
 
 void mouse_callback(GLFWwindow *window, double xpos, double ypos) {
