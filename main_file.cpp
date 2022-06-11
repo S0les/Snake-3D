@@ -99,7 +99,7 @@ void windowResizeCallback(GLFWwindow *window, int width, int height) {
 }
 
 void initOpenglProgram(GLFWwindow *window) {
-  glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+  glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
   glfwSetWindowSizeCallback(window, windowResizeCallback);
   glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
   glfwSetKeyCallback(window, key_callback);
