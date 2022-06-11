@@ -22,6 +22,7 @@ struct Snake {
 };
 
 extern int snake_total;
+extern float apple_coords[2];
 extern Snake SnakeData[1024];
 extern GLuint map_texture;
 extern GLuint column_texture;

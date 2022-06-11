@@ -1,11 +1,13 @@
 #include "objects.h"
-#include <vector>
 #include <GLFW/glfw3.h>
+#include <cstdlib>
+#include <glm/ext/matrix_transform.hpp>
+#include <vector>
 
 //----------------------------
 #include <assimp/Importer.hpp>
-#include <assimp/scene.h>
 #include <assimp/postprocess.h>
+#include <assimp/scene.h>
 //---------------------------
 
 GLuint textureSampler;
@@ -25,8 +27,39 @@ GLuint fence_texture;
 GLuint snake_texture;
 
 float snake_speed = 0.05f;
+float apple_coords[2];
+
 int snake_total;
 Snake SnakeData[1024];
+
+void gen_apple_coords() {
+  apple_coords[0] = ((rand() / static_cast<float>(RAND_MAX)) * 18.f) - 9.f;
+  apple_coords[1] = ((rand() / static_cast<float>(RAND_MAX)) * 18.f) - 9.f;
+}
+
+bool is_collision(float first[2], float second[2]) {
+  float squared_x = pow(first[0] - second[0], 2);
+  float squared_y = pow(first[1] - second[1], 2);
+  float distance = sqrt(squared_x + squared_y);
+  if (distance > 0.6f)
+    return false;
+  else
+    return true;
+}
+
+void reset_apple(void) {
+  int state = 1;
+  while (state == 1) {
+    gen_apple_coords();
+    for (int i = 0; i < snake_total; i++) {
+    	state = 0;
+      if (is_collision(SnakeData[i].snake_coords, apple_coords)) {
+        state = 1;
+        break;
+      }
+    }
+  }
+}
 
 void initObjects(void) {
   map_texture = loadTexture("images/map-texture.png");
@@ -35,6 +68,7 @@ void initObjects(void) {
   snake_texture = loadTexture("images/snake.jpg");
   textureSampler = loadTexture("images/apple_tex.jpg");
   reset_snake();
+  reset_apple();
 }
 
 void reset_snake(void) {
@@ -159,71 +193,76 @@ void generateColumn(ShaderProgram *basicShader, int columnNumber) {
   glDisableVertexAttribArray(basicShader->attrib("texCoord"));
 }
 
-void loadModel(std::string plik){
+void loadModel(std::string plik) {
 
-        using namespace std;
+  using namespace std;
 
-        Assimp::Importer importer;
-        const aiScene* scene = importer.ReadFile(plik,aiProcess_Triangulate | aiProcess_FlipUVs |aiProcess_GenSmoothNormals);
-        cout << importer.GetErrorString() << endl;
-        aiMesh* mesh = scene->mMeshes[0];
+  Assimp::Importer importer;
+  const aiScene *scene =
+      importer.ReadFile(plik, aiProcess_Triangulate | aiProcess_FlipUVs |
+                                  aiProcess_GenSmoothNormals);
+  cout << importer.GetErrorString() << endl;
+  aiMesh *mesh = scene->mMeshes[0];
 
-        for(int i = 0; i < mesh ->mNumVertices; i++)
-        {
-            aiVector3D vertex = mesh->mVertices[i];
-            verts.push_back(glm::vec4(vertex.x,vertex.y,vertex.z,  1));
+  for (int i = 0; i < mesh->mNumVertices; i++) {
+    aiVector3D vertex = mesh->mVertices[i];
+    verts.push_back(glm::vec4(vertex.x, vertex.y, vertex.z, 1));
 
-            aiVector3D normal = mesh->mNormals[i];
-            norms.push_back(glm::vec4(normal.x,normal.y,normal.z,  0));
+    aiVector3D normal = mesh->mNormals[i];
+    norms.push_back(glm::vec4(normal.x, normal.y, normal.z, 0));
 
-            aiVector3D texCoord = mesh->mTextureCoords[0][i];
-            texCoords.push_back(glm::vec2(texCoord.x,texCoord.y));
-        }
-        for (int i = 0 ; i < mesh->mNumFaces; i++){
-            aiFace& face = mesh->mFaces[i];
+    aiVector3D texCoord = mesh->mTextureCoords[0][i];
+    texCoords.push_back(glm::vec2(texCoord.x, texCoord.y));
+  }
+  for (int i = 0; i < mesh->mNumFaces; i++) {
+    aiFace &face = mesh->mFaces[i];
 
-            for(int j = 0; j < face.mNumIndices; j++ )
-            {
-                indices.push_back(face.mIndices[j]);
-            }
-        }
+    for (int j = 0; j < face.mNumIndices; j++) {
+      indices.push_back(face.mIndices[j]);
+    }
+  }
 
-        aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+  aiMaterial *material = scene->mMaterials[mesh->mMaterialIndex];
 
-        for(int i = 0; i < material->GetTextureCount(aiTextureType_DIFFUSE);i++)
-        {
-            aiString str;
-            material -> GetTexture(aiTextureType_DIFFUSE,i,&str);
-        }
+  for (int i = 0; i < material->GetTextureCount(aiTextureType_DIFFUSE); i++) {
+    aiString str;
+    material->GetTexture(aiTextureType_DIFFUSE, i, &str);
+  }
 }
 
-void generateRing(ShaderProgram *basicShader){
+void generateRing(ShaderProgram *basicShader) {
 
-     glEnableVertexAttribArray(basicShader->attrib("position"));
-     glVertexAttribPointer(basicShader->attrib("position"), 4, GL_FLOAT, false, 0, verts.data()); //Współrzędne wierzchołków bierz z tablicy birdVertices
+  glEnableVertexAttribArray(basicShader->attrib("position"));
+  glVertexAttribPointer(
+      basicShader->attrib("position"), 4, GL_FLOAT, false, 0,
+      verts.data()); // Współrzędne wierzchołków bierz z tablicy birdVer
 
-     glEnableVertexAttribArray(basicShader->attrib("texCoord"));
-     glVertexAttribPointer(basicShader->attrib("texCoord"), 2, GL_FLOAT, false, 0, texCoords.data()); //Współrzędne wierzchołków bierz z tablicy birdColors
+  glEnableVertexAttribArray(basicShader->attrib("texCoord"));
+  glVertexAttribPointer(
+      basicShader->attrib("texCoord"), 2, GL_FLOAT, false, 0,
+      texCoords.data()); // Współrzędne wierzchołków bierz z tablicy birdC
 
-      glEnableVertexAttribArray(basicShader->attrib("normal"));
-      glVertexAttribPointer(basicShader->attrib("normal"), 4, GL_FLOAT, false, 0, norms.data()); //Współrzędne wierzchołków bierz  z tablicy birdColors
+  glEnableVertexAttribArray(basicShader->attrib("normal"));
+  glVertexAttribPointer(
+      basicShader->attrib("normal"), 4, GL_FLOAT, false, 0,
+      norms.data()); // Współrzędne wierzchołków bierz  z tablicy birdC
 
-     glActiveTexture(GL_TEXTURE0);
-     glBindTexture(GL_TEXTURE_2D, textureSampler);
-     glUniform1i(basicShader->uniform("textureSampler"),0);
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, textureSampler);
+  glUniform1i(basicShader->uniform("textureSampler"), 0);
 
-      glm::mat4 model = glm::mat4(1.0f);
-      model = glm::rotate(model,(GLfloat)glfwGetTime() * 1.0f,glm::vec3(0.0f, 1.0f, 0.0f));
-      model = glm::scale(model,glm::vec3(0.311f, 0.311f, 0.311f));
-      glUniformMatrix4fv(basicShader->uniform("model"), 1, false,glm::value_ptr(model));
+  glm::mat4 model = glm::mat4(1.0f);
+  model = glm::translate(model, glm::vec3(-apple_coords[0], 0.311f, -apple_coords[1]));
+  model = glm::scale(model, glm::vec3(0.311f, 0.311f, 0.311f));
+  glUniformMatrix4fv(basicShader->uniform("model"), 1, false,
+                     glm::value_ptr(model));
 
+  glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, indices.data());
 
-     glDrawElements(GL_TRIANGLES,indices.size(), GL_UNSIGNED_INT, indices.data());
-
-     glDisableVertexAttribArray(basicShader->attrib("vertex"));
-     glDisableVertexAttribArray(basicShader->attrib("texCoord"));
-     glDisableVertexAttribArray(basicShader->attrib("normal"));
- }
+  glDisableVertexAttribArray(basicShader->attrib("vertex"));
+  glDisableVertexAttribArray(basicShader->attrib("texCoord"));
+  glDisableVertexAttribArray(basicShader->attrib("normal"));
+}
 
 void generateSnake(ShaderProgram *basicShader, Snake snake_current) {
   glEnableVertexAttribArray(basicShader->attrib("position"));
@@ -292,15 +331,18 @@ void check_collision() {
   float y = SnakeData[0].snake_coords[1];
   if (y < -9.4f || y > 10.f || x < -9.4f || x > 10.f) {
     reset_snake();
+    reset_apple();
     return;
   }
   for (int i = 1; i < snake_total; i++) {
-    double squared_x = pow((SnakeData[i].snake_coords[0] - x), 2);
-    double squared_y = pow((SnakeData[i].snake_coords[1] - y), 2);
-    double distance = sqrt(squared_y + squared_x);
-    if (distance < 0.6f) {
+    if (is_collision(SnakeData[0].snake_coords, SnakeData[i].snake_coords)) {
       reset_snake();
+      reset_apple();
       return;
     }
+  }
+  if (is_collision(SnakeData[0].snake_coords, apple_coords)){
+  	snake_total += 1;
+	reset_apple();
   }
 }
