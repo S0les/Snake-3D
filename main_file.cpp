@@ -12,19 +12,13 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
+#include <math.h>
 #include <stdlib.h>
-
-int total_snake = 1;
+int view_status = 0;
 int aspectRatio = 1;
-int state = 1;
-int coord_index = 1;
-float distance = -0.05f;
-float rotate_angle = 0.f;
-float snake_coords[2] = {0.f, 0.f};
 const GLuint WIDTH = 1080, HEIGHT = 800;
 bool keys[1024];
 
-// Camera , function LookAt
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
 GLfloat lastX = WIDTH / 2.0;
 GLfloat lastY = HEIGHT / 2.0;
@@ -42,11 +36,9 @@ void initOpenglProgram(GLFWwindow *window);
 void freeOpenglProgram(GLFWwindow *window);
 void drawScene(GLFWwindow *window);
 void initWindow(GLFWwindow *window);
-void do_movement(void);
 void generateRing(ShaderProgram *basicShader);
-void update_direction(float angle);
-GLuint readTexture(const char* filename) ;
 void loadModel(std::string plik);
+void do_movement(GLFWwindow *window);
 
 int main(int argc, char *argv[]) {
   GLFWwindow *window;
@@ -70,11 +62,12 @@ int main(int argc, char *argv[]) {
 
   while (!glfwWindowShouldClose(window)) {
 
+    snake_save_old_angle();
+    do_movement(window);
     lookAt();
     drawScene(window);
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwPollEvents();
-    do_movement();
   }
 
   freeShaders();
@@ -85,27 +78,18 @@ int main(int argc, char *argv[]) {
 
 void key_callback(GLFWwindow *window, int key, int scancode, int action,
                   int mode) {
-  if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-    glfwSetWindowShouldClose(window, GL_TRUE);
-
-  if ((key == GLFW_KEY_D) && action == GLFW_PRESS) {
-    update_direction(1.5708f);
-    if (state == 0)
-      distance *= -1.0f;
+  if (key >= 0 && key < 1024) {
+    if (action == GLFW_PRESS)
+      keys[key] = true;
+    else if (action == GLFW_RELEASE)
+      keys[key] = false;
   }
-
-  if ((key == GLFW_KEY_A) && action == GLFW_PRESS) {
-    update_direction(-1.5708f);
-    if (state == 1)
-      distance *= -1.0f;
+  if (key == GLFW_KEY_V && action == GLFW_PRESS) {
+    view_status = (view_status + 1) % 2;
   }
-
-  //  if (key >= 0 && key < 1024) {
-  //    if (action == GLFW_PRESS)
-  //      keys[key] = true;
-  //    else if (action == GLFW_RELEASE)
-  //      keys[key] = false;
-  // }
+  if (key == GLFW_KEY_K && action == GLFW_PRESS) {
+    snake_total += 1;
+  }
 }
 
 void windowResizeCallback(GLFWwindow *window, int width, int height) {
@@ -122,7 +106,6 @@ void initOpenglProgram(GLFWwindow *window) {
   glfwSetKeyCallback(window, key_callback);
   initObjects();
   loadModel(std::string("apple.FBX"));
-
   return;
 }
 
@@ -138,30 +121,10 @@ void drawScene(GLFWwindow *window) {
   glEnable(GL_DEPTH_TEST);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   basicShader->use();
-  generateMap(basicShader);
-  for (int i = 0; i < 4; i++) {
-    generateFence(basicShader, i);
-    generateColumn(basicShader, i);
-  }
   generateRing(basicShader);
-  for (int i = 0; i < total_snake; i++)
-    snakeData[i].snake_coords[coord_index] += distance;
-  generateSnake(basicShader, total_snake);
-  for (int i = 0; i < 2; i++) {
-    if (snakeData[0].snake_coords[i] > 9.49f ||
-        snakeData[0].snake_coords[i] < -10.12f) {
-      for (int j = 0; j < total_snake; j++) {
-        snakeData[j].snake_coords[0] = 0.f;
-        snakeData[j].snake_coords[1] = 0.f + 0.625 * j;
-      }
-      coord_index = 1;
-      state = 1;
-      snakeData[0].rotate_angle = 0.f;
-      distance = -0.05f;
-      total_snake = 1;
-    }
-  }
-
+  generateObjects();
+  update_snake_coords();
+  check_collision();
   glfwSwapBuffers(window);
   return;
 }
@@ -195,13 +158,16 @@ void lookAt() {
   glm::mat4 view = glm::mat4(1.0f);
   view = camera.GetViewMatrix();
   glm::mat4 projection = glm::mat4(1.0f);
-  model = glm::rotate(model, 0.0f, glm::vec3(0.5f, 1.0f, 0.0f));
-  view =
-      glm::rotate(view, snakeData[0].rotate_angle, glm::vec3(0.0f, 1.0f, 0.0f));
-  view = glm::translate(view, glm::vec3(-snakeData[0].snake_coords[0], -1.2f,
-                                        -snakeData[0].snake_coords[1]));
-  // view = glm::rotate(view, 1.5708f, glm::vec3(1.0f, 0.0f, 0.0f));
-  // view = glm::translate(view, glm::vec3(0.0f, -20.0f, 0.0f));
+  if (!view_status) {
+    view = glm::rotate(view, 0.5f, glm::vec3(1.0f, 0.0f, 0.0f));
+    view = glm::rotate(view, SnakeData[0].snake_rotate_angle,
+                       glm::vec3(0.0f, 1.0f, 0.0f));
+    view = glm::translate(view, glm::vec3(SnakeData[0].snake_coords[0], -1.5f,
+                                          SnakeData[0].snake_coords[1]));
+  } else {
+    view = glm::rotate(view, 1.5708f, glm::vec3(1.0f, 0.0f, 0.0f));
+    view = glm::translate(view, glm::vec3(0.0f, -20.0f, 0.0f));
+  }
   projection = glm::perspective(camera.Zoom, (GLfloat)WIDTH / (GLfloat)HEIGHT,
                                 0.1f, 100.0f);
 
@@ -232,33 +198,28 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos) {
   camera.ProcessMouseMovement(xoffset, yoffset);
 }
 
-void do_movement() {
-  if (keys[GLFW_KEY_W])
-    camera.ProcessKeyboard(FORWARD, deltaTime);
-  if (keys[GLFW_KEY_S])
-    camera.ProcessKeyboard(BACKWARD, deltaTime);
-  if (keys[GLFW_KEY_A])
-    camera.ProcessKeyboard(LEFT, deltaTime);
-  if (keys[GLFW_KEY_D])
-    camera.ProcessKeyboard(RIGHT, deltaTime);
-}
+void do_movement(GLFWwindow *window) {
+  //  if (keys[GLFW_KEY_W])
+  //    camera.ProcessKeyboard(FORWARD, deltaTime);
+  //  if (keys[GLFW_KEY_S])
+  //    camera.ProcessKeyboard(BACKWARD, deltaTime);
+  //  if (keys[GLFW_KEY_A])
+  //    camera.ProcessKeyboard(LEFT, deltaTime);
+  //  if (keys[GLFW_KEY_D])
+  //    camera.ProcessKeyboard(RIGHT, deltaTime);
+  if (keys[GLFW_KEY_ESCAPE])
+    glfwSetWindowShouldClose(window, GL_TRUE);
+  if (keys[GLFW_KEY_D]) {
+    SnakeData[0].snake_rotate_angle += 0.0523599;
+    SnakeData[0].snake_rotate_angle =
+        remainder(SnakeData[0].snake_rotate_angle, 6.28319f);
+  }
 
-void update_direction(float angle) {
-  for (int i = 1; i < total_snake; i++) {
-    for (int j = 0; j < 2; j++)
-      snakeData[i].snake_coords[j] = snakeData[i - 1].snake_coords[j];
-    snakeData[i].rotate_angle = snakeData[i - 1].rotate_angle;
+  if (keys[GLFW_KEY_A]) {
+    SnakeData[0].snake_rotate_angle -= 0.0523599;
+    SnakeData[0].snake_rotate_angle =
+        remainder(SnakeData[0].snake_rotate_angle, 6.28319f);
   }
-  if (distance >= 0) {
-    snakeData[0].snake_coords[coord_index] =
-        (ceil(snakeData[0].snake_coords[coord_index] / 0.625f)) * 0.625f;
-  } else {
-    snakeData[0].snake_coords[coord_index] =
-        (floor(snakeData[0].snake_coords[coord_index] / 0.625f)) * 0.625f;
-  }
-  coord_index = (coord_index + 1) % 2;
-  state = (state + 1) % 2;
-  snakeData[0].rotate_angle += angle;
 }
 
 

@@ -15,27 +15,43 @@ std::vector<glm::vec4> norms;
 std::vector<glm::vec2> texCoords;
 std::vector<unsigned int> indices;
 //----------------------------
+#include "shaderprogram.h"
+#include <cstdio>
+#include <math.h>
 
 GLuint map_texture;
 GLuint column_texture;
 GLuint fence_texture;
 GLuint snake_texture;
-SnakeInfo snakeData[1024];
 
-void initObjects(void){
+float snake_speed = 0.05f;
+int snake_total;
+Snake SnakeData[1024];
+
+void initObjects(void) {
   map_texture = loadTexture("images/map-texture.png");
   fence_texture = loadTexture("images/bricks.png");
   column_texture = loadTexture("images/bricks.png");
   snake_texture = loadTexture("images/snake.jpg");
   textureSampler = loadTexture("images/apple_tex.jpg");
-
-  for (int i = 0; i < 1024; i++) {
-    for (int j = 0; j < 2; j++)
-      snakeData[i].snake_coords[j] = 0.f;
-    snakeData[i].texture = snake_texture;
-  }
-  snakeData[1].snake_coords[1] = -0.622;
+  reset_snake();
 }
+
+void reset_snake(void) {
+  for (int i = 0; i < 1024; i++) {
+    SnakeData[i].snake_coords[0] = 0.f;
+    SnakeData[i].snake_coords[1] = 0.f;
+    SnakeData[i].snake_rotate_angle = 0.f;
+    for (int j = 0; j < 13; j++) {
+      SnakeData[i].snake_rotate_angle_old[j] = 0.f;
+      SnakeData[i].snake_pos_old[j][0] = 0.f;
+      SnakeData[i].snake_pos_old[j][1] = 0.f;
+    }
+    SnakeData[i].snake_texture = snake_texture;
+  }
+  snake_total = 1;
+}
+
 GLuint loadTexture(const char *filepath) {
   GLuint texture;
   int img_width, img_height;
@@ -54,6 +70,16 @@ GLuint loadTexture(const char *filepath) {
   glBindTexture(GL_TEXTURE_2D, 0);
   SOIL_free_image_data(image);
   return texture;
+}
+
+void generateObjects() {
+  for (int i = 0; i < snake_total; i++)
+    generateSnake(basicShader, SnakeData[i]);
+  generateMap(basicShader);
+  for (int i = 0; i < 4; i++) {
+    generateFence(basicShader, i);
+    generateColumn(basicShader, i);
+  }
 }
 
 void generateMap(ShaderProgram *basicShader) {
@@ -98,7 +124,8 @@ void generateFence(ShaderProgram *basicShader, int fenceNumber) {
                      glm::value_ptr(model));
 
   glEnableVertexAttribArray(basicShader->attrib("texCoord"));
-  glVertexAttribPointer(basicShader->attrib("texCoord"), 2, GL_FLOAT, false, 0, fence_tex_coords);
+  glVertexAttribPointer(basicShader->attrib("texCoord"), 2, GL_FLOAT, false, 0,
+                        fence_tex_coords);
 
   glDrawArrays(GL_TRIANGLES, 0, fence_vertexcount);
   glDisableVertexAttribArray(basicShader->attrib("position"));
@@ -129,36 +156,6 @@ void generateColumn(ShaderProgram *basicShader, int columnNumber) {
   glDrawArrays(GL_TRIANGLES, 0, column_vertexcount);
   glDisableVertexAttribArray(basicShader->attrib("position"));
   glDisableVertexAttribArray(basicShader->attrib("texCoord"));
-}
-
-void generateSnake(ShaderProgram *basicShader, int total_snake) {
-  for (int i = 0; i < total_snake; i++) {
-    glEnableVertexAttribArray(basicShader->attrib("position"));
-    glVertexAttribPointer(basicShader->attrib("position"), 4, GL_FLOAT, false,
-                          0, cube_vertices);
-
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, snakeData[i].texture);
-    glUniform1i(basicShader->uniform("textureSampler"), 0);
-
-    glm::mat4 model = glm::mat4(1.0f);
-    model =
-        glm::translate(model, glm::vec3(snakeData[i].snake_coords[0], 0.311f,
-                                        snakeData[i].snake_coords[1]));
-    model = glm::scale(model, glm::vec3(0.311f, 0.311f, 0.311f));
-    model = glm::rotate(model, -snakeData[i].rotate_angle,
-                        glm::vec3(0.f, 1.f, 0.f));
-    glUniformMatrix4fv(basicShader->uniform("model"), 1, false,
-                       glm::value_ptr(model));
-
-    glEnableVertexAttribArray(basicShader->attrib("texCoord"));
-    glVertexAttribPointer(basicShader->attrib("texCoord"), 2, GL_FLOAT, false,
-                          0, cube_tex_coords);
-
-    glDrawArrays(GL_TRIANGLES, 0, cube_vertexcount);
-    glDisableVertexAttribArray(basicShader->attrib("position"));
-    glDisableVertexAttribArray(basicShader->attrib("texCoord"));
-  }
 }
 
 void loadModel(std::string plik){
@@ -199,7 +196,6 @@ void loadModel(std::string plik){
         }
 }
 
-
 void generateRing(ShaderProgram *basicShader){
 
      glEnableVertexAttribArray(basicShader->attrib("position"));
@@ -229,5 +225,82 @@ void generateRing(ShaderProgram *basicShader){
      glDisableVertexAttribArray(basicShader->attrib("normal"));
  }
 
+void generateSnake(ShaderProgram *basicShader, Snake snake_current) {
+  glEnableVertexAttribArray(basicShader->attrib("position"));
+  glVertexAttribPointer(basicShader->attrib("position"), 4, GL_FLOAT, false, 0,
+                        cube_vertices);
 
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, snake_current.snake_texture);
+  glUniform1i(basicShader->uniform("textureSampler"), 0);
 
+  glm::mat4 model = glm::mat4(1.0f);
+  model =
+      glm::translate(model, glm::vec3(-snake_current.snake_coords[0], 0.311f,
+                                      -snake_current.snake_coords[1]));
+  model = glm::scale(model, glm::vec3(0.311f, 0.311f, 0.311f));
+  model = glm::rotate(model, -snake_current.snake_rotate_angle,
+                      glm::vec3(0.f, 1.f, 0.f));
+  glUniformMatrix4fv(basicShader->uniform("model"), 1, false,
+                     glm::value_ptr(model));
+
+  glEnableVertexAttribArray(basicShader->attrib("texCoord"));
+  glVertexAttribPointer(basicShader->attrib("texCoord"), 2, GL_FLOAT, false, 0,
+                        cube_tex_coords);
+
+  glDrawArrays(GL_TRIANGLES, 0, cube_vertexcount);
+  glDisableVertexAttribArray(basicShader->attrib("position"));
+  glDisableVertexAttribArray(basicShader->attrib("texCoord"));
+}
+
+void update_snake_coords() {
+  SnakeData[0].snake_coords[0] =
+      SnakeData[0].snake_coords[0] +
+      snake_speed * cos(SnakeData[0].snake_rotate_angle + 1.5708f);
+  SnakeData[0].snake_coords[1] =
+      SnakeData[0].snake_coords[1] +
+      snake_speed * sin(SnakeData[0].snake_rotate_angle + 1.5708f);
+  SnakeData[0].snake_rotate_angle_old[0] = SnakeData[0].snake_rotate_angle;
+  SnakeData[0].snake_pos_old[0][0] = SnakeData[0].snake_coords[0];
+  SnakeData[0].snake_pos_old[0][1] = SnakeData[0].snake_coords[1];
+  for (int i = 1; i < 1024; i++) {
+    SnakeData[i].snake_coords[0] = SnakeData[i].snake_pos_old[0][0];
+    SnakeData[i].snake_coords[1] = SnakeData[i].snake_pos_old[0][1];
+    SnakeData[i].snake_rotate_angle = SnakeData[i].snake_rotate_angle_old[0];
+  }
+}
+
+void snake_save_old_angle(void) {
+  for (int i = 1023; i > -1; i--) {
+    for (int j = 12; j > 0; j--) {
+      SnakeData[i].snake_rotate_angle_old[j] =
+          SnakeData[i].snake_rotate_angle_old[j - 1];
+      SnakeData[i].snake_pos_old[j][0] = SnakeData[i].snake_pos_old[j - 1][0];
+      SnakeData[i].snake_pos_old[j][1] = SnakeData[i].snake_pos_old[j - 1][1];
+    }
+    if (i != 0) {
+      SnakeData[i].snake_rotate_angle_old[0] =
+          SnakeData[i - 1].snake_rotate_angle_old[12];
+      SnakeData[i].snake_pos_old[0][0] = SnakeData[i - 1].snake_pos_old[12][0];
+      SnakeData[i].snake_pos_old[0][1] = SnakeData[i - 1].snake_pos_old[12][1];
+    }
+  }
+}
+
+void check_collision() {
+  float x = SnakeData[0].snake_coords[0];
+  float y = SnakeData[0].snake_coords[1];
+  if (y < -9.4f || y > 10.f || x < -9.4f || x > 10.f) {
+    reset_snake();
+    return;
+  }
+  for (int i = 1; i < snake_total; i++) {
+    double squared_x = pow((SnakeData[i].snake_coords[0] - x), 2);
+    double squared_y = pow((SnakeData[i].snake_coords[1] - y), 2);
+    double distance = sqrt(squared_y + squared_x);
+    if (distance < 0.6f) {
+      reset_snake();
+      return;
+    }
+  }
+}
