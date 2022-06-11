@@ -3,4 +3,5 @@
 extern float map_vertices[];
 extern float map_tex_coords[];
 extern int map_vertexcount;
+extern float map_normals[];
 #endif

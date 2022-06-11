@@ -131,6 +131,9 @@ void generateMap(ShaderProgram *basicShader) {
   glVertexAttribPointer(basicShader->attrib("texCoord"), 2, GL_FLOAT, false, 0,
                         map_tex_coords);
 
+  glEnableVertexAttribArray(basicShader->attrib("normal"));
+  glVertexAttribPointer(basicShader->attrib("normal"), 4, GL_FLOAT, false, 0,fence_normals);
+
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, map_texture);
   glUniform1i(basicShader->uniform("textureSampler"), 0);
@@ -142,6 +145,7 @@ void generateMap(ShaderProgram *basicShader) {
                      glm::value_ptr(model));
 
   glDrawArrays(GL_TRIANGLES, 0, map_vertexcount);
+  glDisableVertexAttribArray(basicShader->attrib("normal"));
   glDisableVertexAttribArray(basicShader->attrib("position"));
   glDisableVertexAttribArray(basicShader->attrib("texCoord"));
 }
@@ -154,6 +158,10 @@ void generateFence(ShaderProgram *basicShader, int fenceNumber) {
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, fence_texture);
   glUniform1i(basicShader->uniform("textureSampler"), 0);
+
+  glEnableVertexAttribArray(basicShader->attrib("normal"));
+  glVertexAttribPointer(basicShader->attrib("normal"), 4, GL_FLOAT, false, 0,fence_normals);
+
 
   glm::mat4 model = glm::mat4(1.0f);
   model = glm::translate(model, fencePositions[fenceNumber]);
@@ -168,6 +176,7 @@ void generateFence(ShaderProgram *basicShader, int fenceNumber) {
                         fence_tex_coords);
 
   glDrawArrays(GL_TRIANGLES, 0, fence_vertexcount);
+  glDisableVertexAttribArray(basicShader->attrib("normal"));
   glDisableVertexAttribArray(basicShader->attrib("position"));
   glDisableVertexAttribArray(basicShader->attrib("texCoord"));
 }
@@ -180,6 +189,10 @@ void generateColumn(ShaderProgram *basicShader, int columnNumber) {
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, column_texture);
   glUniform1i(basicShader->uniform("textureSampler"), 0);
+
+  glEnableVertexAttribArray(basicShader->attrib("normal"));
+  glVertexAttribPointer(basicShader->attrib("normal"), 4, GL_FLOAT, false, 0,fence_normals);
+
 
   glm::mat4 model = glm::mat4(1.0f);
   model = glm::translate(model, columnPositions[columnNumber]);
@@ -194,6 +207,7 @@ void generateColumn(ShaderProgram *basicShader, int columnNumber) {
                         column_tex_coords);
 
   glDrawArrays(GL_TRIANGLES, 0, column_vertexcount);
+  glDisableVertexAttribArray(basicShader->attrib("normal"));
   glDisableVertexAttribArray(basicShader->attrib("position"));
   glDisableVertexAttribArray(basicShader->attrib("texCoord"));
 }
@@ -294,6 +308,10 @@ void generateSnake(ShaderProgram *basicShader, Snake snake_current) {
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, snake_current.snake_texture);
   glUniform1i(basicShader->uniform("textureSampler"), 0);
+ 
+  glEnableVertexAttribArray(basicShader->attrib("normal"));
+  glVertexAttribPointer(basicShader->attrib("normal"), 4, GL_FLOAT, false, 0,fence_normals);
+
 
   glm::mat4 model = glm::mat4(1.0f);
   model =
@@ -310,6 +328,7 @@ void generateSnake(ShaderProgram *basicShader, Snake snake_current) {
                         cube_tex_coords);
 
   glDrawArrays(GL_TRIANGLES, 0, cube_vertexcount);
+  glDisableVertexAttribArray(basicShader->attrib("normal"));
   glDisableVertexAttribArray(basicShader->attrib("position"));
   glDisableVertexAttribArray(basicShader->attrib("texCoord"));
 }
