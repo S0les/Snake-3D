@@ -18,13 +18,12 @@ struct Light {
     float quadratic;
 };
 
-void main()
-{
+vec3 generate_light(vec3 position){
     Light light;
     // light.position = vec3(0.f, 0.f, 0.f);
-    light.position = vec3(-6.25f, 0.311f, -5.625f);
+    light.position = position;
     light.diffuse = vec3(0.5f, 0.5f, 0.5f);
-    light.ambient = vec3(0.4f, 0.4f, 0.4f);
+    light.ambient = vec3(0.1f, 0.1f, 0.1f);
     light.constant = 1.0f;
     light.linear = 0.09f;
     light.quadratic = 0.032f;
@@ -45,5 +44,22 @@ void main()
     ambient  *= attenuation;  
         
     vec3 result = ambient + diffuse;
+    return result;
+}
+
+const vec3 positions[5] = vec3[5](
+    vec3(-6.25f, 0.311f, -5.625f),
+    vec3(5.625f, 0.311f, 5.625f),
+    vec3(5.625f, 0.311f, -5.625f),
+    vec3(-6.25f, 0.311f, 5.625f),
+    vec3(0.0f, 0.311f, 0.625f)
+);
+
+void main()
+{
+    vec3 result = vec3(0.f, 0.f, 0.f);
+    for (int i=0; i<5; i++){
+        result += generate_light(positions[i]);
+    }
     pixelColor = vec4(result, 1.0f);
 }
