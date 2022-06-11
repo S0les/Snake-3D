@@ -1,4 +1,5 @@
 #include "objects.h"
+#include "cube.h"
 #include <GLFW/glfw3.h>
 #include <cstdlib>
 #include <glm/ext/matrix_transform.hpp>
@@ -50,11 +51,22 @@ bool is_collision(float first[2], float second[2]) {
 
 void reset_apple(void) {
   int state = 1;
+  float boxes[5][2] = {{6.25f, 5.625f},
+                       {6.25f, -5.625f},
+                       {-5.625f, 5.625f},
+                       {-5.625f, -5.625f},
+                       {0.0f, -0.625f}};
   while (state == 1) {
+    state = 0;
     gen_apple_coords();
     for (int i = 0; i < snake_total; i++) {
-    	state = 0;
       if (is_collision(SnakeData[i].snake_coords, apple_coords)) {
+        state = 1;
+        break;
+      }
+    }
+    for (int i = 0; i < 5; i++) {
+      if (is_collision(boxes[i], apple_coords)) {
         state = 1;
         break;
       }
@@ -118,9 +130,9 @@ void generateObjects() {
     generateFence(basicShader, i);
     generateColumn(basicShader, i);
   }
-  for (int i = 0; i < 5; i++)
-  {generateLamp(basicShader,i);}
-
+  for (int i = 0; i < 5; i++) {
+    generateLamp(basicShader, i);
+  }
 }
 
 void generateMap(ShaderProgram *basicShader) {
@@ -157,8 +169,8 @@ void generateFence(ShaderProgram *basicShader, int fenceNumber) {
   glUniform1i(basicShader->uniform("textureSampler"), 0);
 
   glEnableVertexAttribArray(basicShader->attrib("normal"));
-  glVertexAttribPointer(basicShader->attrib("normal"), 4, GL_FLOAT, false, 0,fence_normals);
-
+  glVertexAttribPointer(basicShader->attrib("normal"), 4, GL_FLOAT, false, 0,
+                        fence_normals);
 
   glm::mat4 model = glm::mat4(1.0f);
   model = glm::translate(model, fencePositions[fenceNumber]);
@@ -188,8 +200,8 @@ void generateColumn(ShaderProgram *basicShader, int columnNumber) {
   glUniform1i(basicShader->uniform("textureSampler"), 0);
 
   glEnableVertexAttribArray(basicShader->attrib("normal"));
-  glVertexAttribPointer(basicShader->attrib("normal"), 4, GL_FLOAT, false, 0,fence_normals);
-
+  glVertexAttribPointer(basicShader->attrib("normal"), 4, GL_FLOAT, false, 0,
+                        fence_normals);
 
   glm::mat4 model = glm::mat4(1.0f);
   model = glm::translate(model, columnPositions[columnNumber]);
@@ -268,7 +280,8 @@ void generateRing(ShaderProgram *basicShader) {
   glUniform1i(basicShader->uniform("textureSampler"), 0);
 
   glm::mat4 model = glm::mat4(1.0f);
-  model = glm::translate(model, glm::vec3(-apple_coords[0], 0.311f, -apple_coords[1]));
+  model = glm::translate(model,
+                         glm::vec3(-apple_coords[0], 0.311f, -apple_coords[1]));
   model = glm::scale(model, glm::vec3(0.311f, 0.311f, 0.311f));
   glUniformMatrix4fv(basicShader->uniform("model"), 1, false,
                      glm::value_ptr(model));
@@ -286,23 +299,22 @@ void generateLamp(ShaderProgram *basicShader, int lampNumber) {
   glVertexAttribPointer(basicShader->attrib("position"), 4, GL_FLOAT, false, 0,
                         cube_vertices);
   glEnableVertexAttribArray(basicShader->attrib("normal"));
-  glVertexAttribPointer(basicShader->attrib("normal"), 4, GL_FLOAT, false, 0,cube_normals);
+  glVertexAttribPointer(basicShader->attrib("normal"), 4, GL_FLOAT, false, 0,
+                        cube_normals);
 
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, box_texture);
   glUniform1i(basicShader->uniform("textureSampler"), 0);
 
-
   glm::mat4 model = glm::mat4(1.0f);
   model = glm::translate(model, lampPositions[lampNumber]);
-  model = glm::scale(model,glm::vec3(0.311f, 0.311f, 0.311f));
+  model = glm::scale(model, glm::vec3(0.311f, 0.311f, 0.311f));
   glUniformMatrix4fv(basicShader->uniform("model"), 1, false,
                      glm::value_ptr(model));
 
   glEnableVertexAttribArray(basicShader->attrib("texCoord"));
   glVertexAttribPointer(basicShader->attrib("texCoord"), 2, GL_FLOAT, false, 0,
-                           cube_tex_coords);
- 
+                        cube_tex_coords);
 
   glDrawArrays(GL_TRIANGLES, 0, cube_vertexcount);
   glDisableVertexAttribArray(basicShader->attrib("position"));
@@ -318,10 +330,10 @@ void generateSnake(ShaderProgram *basicShader, Snake snake_current) {
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, snake_current.snake_texture);
   glUniform1i(basicShader->uniform("textureSampler"), 0);
- 
-  glEnableVertexAttribArray(basicShader->attrib("normal"));
-  glVertexAttribPointer(basicShader->attrib("normal"), 4, GL_FLOAT, false, 0,fence_normals);
 
+  glEnableVertexAttribArray(basicShader->attrib("normal"));
+  glVertexAttribPointer(basicShader->attrib("normal"), 4, GL_FLOAT, false, 0,
+                        fence_normals);
 
   glm::mat4 model = glm::mat4(1.0f);
   model =
@@ -392,8 +404,18 @@ void check_collision() {
       return;
     }
   }
-  if (is_collision(SnakeData[0].snake_coords, apple_coords)){
-  	snake_total += 1;
-	reset_apple();
+  float boxes[5][2] = {{6.25f, 5.625f},
+                       {6.25f, -5.625f},
+                       {-5.625f, 5.625f},
+                       {-5.625f, -5.625f},
+                       {0.0f, -0.625f}};
+  for (int i = 0; i < 5; i++)
+    if (is_collision(SnakeData[0].snake_coords, boxes[i])) {
+      reset_snake();
+      reset_apple();
+    }
+  if (is_collision(SnakeData[0].snake_coords, apple_coords)) {
+    snake_total += 1;
+    reset_apple();
   }
 }
