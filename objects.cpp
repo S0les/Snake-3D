@@ -80,7 +80,7 @@ void initObjects(void) {
   column_texture = loadTexture("images/bricks.png");
   snake_texture = loadTexture("images/snake.jpg");
   textureSampler = loadTexture("images/apple_tex.jpg");
-  box_texture = loadTexture("images/box.png");
+  box_texture = loadTexture("images/box.jpg");
   reset_snake();
   reset_apple();
 }
