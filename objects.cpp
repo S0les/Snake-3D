@@ -107,6 +107,7 @@ GLuint loadTexture(const char *filepath) {
 }
 
 void generateObjects() {
+  basicShader->use();
   generateRing(basicShader);
   for (int i = 0; i < snake_total; i++)
     generateSnake(basicShader, SnakeData[i]);
@@ -115,6 +116,10 @@ void generateObjects() {
     generateFence(basicShader, i);
     generateColumn(basicShader, i);
   }
+  lampShader->use();
+  for (int i = 0; i < 5; i++)
+  {generateLamp(lampShader,i);}
+  basicShader->use();
 }
 
 void generateMap(ShaderProgram *basicShader) {
@@ -262,6 +267,23 @@ void generateRing(ShaderProgram *basicShader) {
   glDisableVertexAttribArray(basicShader->attrib("vertex"));
   glDisableVertexAttribArray(basicShader->attrib("texCoord"));
   glDisableVertexAttribArray(basicShader->attrib("normal"));
+}
+
+void generateLamp(ShaderProgram *lampShader, int lampNumber) {
+
+  glEnableVertexAttribArray(lampShader->attrib("position"));
+  glVertexAttribPointer(lampShader->attrib("position"), 4, GL_FLOAT, false, 0,
+                        cube_vertices);
+
+  glm::mat4 model = glm::mat4(1.0f);
+  model = glm::translate(model, lampPositions[lampNumber]);
+  model = glm::scale(model,glm::vec3(0.311f, 0.311f, 0.311f));
+  glUniformMatrix4fv(lampShader->uniform("lamp_model"), 1, false,
+                     glm::value_ptr(model));
+    
+
+  glDrawArrays(GL_TRIANGLES, 0, cube_vertexcount);
+  glDisableVertexAttribArray(basicShader->attrib("position"));
 }
 
 void generateSnake(ShaderProgram *basicShader, Snake snake_current) {

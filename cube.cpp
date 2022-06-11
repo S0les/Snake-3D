@@ -2,6 +2,12 @@
 
 int cube_vertexcount = 36;
 
+glm::vec3 lampPositions[] = {
+     glm::vec3(-6.25f, 0.311f, -5.625f), glm::vec3(5.625f, 0.311f, -5.625f),
+     glm::vec3(-6.25f, 0.311f, 5.625f), glm::vec3(5.625f, 0.311f, 5.625f),
+     glm::vec3(-0.0f,0.311f,0.625f)};
+ 
+
 float cube_vertices[] = {
     // Wall 1
     1.0f,

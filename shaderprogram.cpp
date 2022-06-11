@@ -1,13 +1,15 @@
 #include "shaderprogram.h"
 
 ShaderProgram *basicShader;
-
+ShaderProgram *lampShader;
 
 void initShaders() {
   basicShader = new ShaderProgram("vertex_shader.glsl", "fragment_shader.glsl");
+  lampShader = new ShaderProgram("lamp_vs.glsl", "lamp_fs.glsl");
 }
 
-void freeShaders() { delete basicShader;}
+void freeShaders() { delete basicShader;
+                      delete lampShader;}
 
 char *ShaderProgram::readFile(const char *fileName) {
   char *result;
